@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>bataSutra — Markets & Tools</title>
+  <meta name="description" content="bataSutra: Not just news — the bata behind the news." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --brand:#8B0000;         /* primary */
+      --brand-ink:#7a0000;     /* darker */
+      --ink:#111;              /* text */
+      --muted:#6b7280;         /* gray-500 */
+      --bg:#ffffff;            /* surface */
+      --soft:#f8fafc;          /* slate-50 */
+      --card:#ffffff;          /* card */
+      --ring:rgba(139,0,0,.25);/* focus ring */
+    }
+
+    html { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+    body { background: var(--bg); color: var(--ink); }
+
+    /* ==== STRUCTURE & UI ATOMS ==== */
+    .container { max-width: 80rem; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+    .card { background: var(--card); border:1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .card-pad { padding: 1rem; }
+    .card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); transition: box-shadow .25s ease; }
+
+    /* ==== TICKERS ==== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
+    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail.plain::before, .ticker-rail.plain::after { display: none; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+    .ticker-left  { animation: scroll-left 120s linear infinite; }
+    .ticker-right { animation: scroll-right 120s linear infinite; }
+    .ticker:hover { animation-play-state: paused; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* ==== REVEAL ANIMATIONS ==== */
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s ease; }
+    .reveal.show { opacity: 1; transform: none; }
+
+    /* ==== SPARKLINES ==== */
+    .spark path { fill: none; stroke-width: 2; }
+
+    /* ==== HEATMAP ==== */
+    .heat-tile { aspect-ratio: 1 / 1; border-radius: .75rem; display:flex; align-items:center; justify-content:center; text-align:center; font-weight:600; font-size:.9rem; color:#0f172a; box-shadow: 0 1px 0 rgba(0,0,0,.05) inset, 0 1px 2px rgba(0,0,0,.04); user-select:none; }
+
+    /* ==== BADGES ==== */
+    .pill { font-weight:600; font-size:.75rem; padding:.25rem .5rem; border-radius:.5rem; }
+
+    /* ==== SKELETONS ==== */
+    .skeleton { background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6); background-size: 200% 100%; animation: shimmer 1.2s linear infinite; }
+    @keyframes shimmer { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+    /* ==== TABLE ==== */
+    .table th { font-weight:600; color:#374151; }
+    .table td, .table th { padding:.75rem 1rem; }
+
+    /* ==== RED (brand) FOOTER inspired by Anthropic layout ==== */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
+  </style>
+</head>
+<body>
+  <!-- Top Ticker: FULL WIDTH -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header / Nav -->
+  <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <div class="container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3">
+        <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+        <div>
+          <div class="text-lg font-bold leading-tight">bataSutra</div>
+          <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
+        </div>
+      </a>
+
+      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
+        <a class="hover:text-[var(--brand-ink)]" href="#indices">Markets</a>
+        <a class="hover:text-[var(--brand-ink)]" href="#heatmap">Heatmap</a>
+        <a class="hover:text-[var(--brand-ink)]" href="#commodities">Commodities</a>
+        <a class="hover:text-[var(--brand-ink)]" href="#tools">Tools</a>
+        <a class="hover:text-[var(--brand-ink)]" href="#articles">Articles</a>
+      </nav>
+
+      <!-- Right actions: Subscribe only -->
+      <div class="flex items-center gap-2">
+        <a href="#subscribe" class="hidden sm:inline-block text-sm font-medium px-3 py-2 rounded-lg bg-[var(--brand)] text-white hover:opacity-90">Subscribe</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="container py-8">
+    <!-- Indices -->
+    <section id="indices" class="py-8 reveal">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold tracking-tight">Indices</h2>
+        <div id="indicesStatus" class="text-xs text-slate-500"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="indicesGrid">
+        <div class="card card-pad skeleton h-32"></div>
+        <div class="card card-pad skeleton h-32"></div>
+        <div class="card card-pad skeleton h-32"></div>
+        <div class="card card-pad skeleton h-32"></div>
+      </div>
+    </section>
+
+    <!-- Dashboard (Intro only; keep “What’s inside?” button) -->
+    <section id="dashboard" class="py-8 reveal">
+      <div class="card p-6 md:p-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="max-w-2xl">
+            <h2 class="text-xl font-bold tracking-tight">Market Pulse Dashboard</h2>
+            <p class="text-slate-600 mt-2">
+              A single pane for breadth, median move, top movers, and live index trends — powered by our Sheets backend.
+            </p>
+            <ul class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-600">
+              <li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-emerald-500"></span> Breadth & A/D ratio</li>
+              <li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-indigo-500"></span> Median % change</li>
+              <li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-rose-500"></span> Top gainers/losers</li>
+              <li class="flex items-center gap-2"><span class="h-2 w-2 rounded-full bg-amber-500"></span> Intraday sparks</li>
+            </ul>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <a href="/dashboard/whats-inside.html" class="px-4 py-2 rounded-lg border border-gray-300 text-slate-700 font-medium hover:border-[var(--brand)] hover:text-[var(--brand-ink)]">What’s inside?</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Heatmap -->
+    <section id="heatmap" class="py-8 reveal">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold tracking-tight">Heatmap</h2>
+        <div class="flex items-center gap-2 text-xs text-slate-600">
+          <span class="inline-block h-3 w-3 rounded" style="background:#e6f6e6"></span><span>Up</span>
+          <span class="inline-block h-3 w-3 rounded" style="background:#fbeaea"></span><span>Down</span>
+        </div>
+      </div>
+      <div id="heatmapGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"></div>
+    </section>
+
+    <!-- Commodities -->
+    <section id="commodities" class="py-8 reveal">
+      <h2 class="text-xl font-bold tracking-tight mb-4">Commodities</h2>
+      <div class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full table">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="text-left">Instrument</th>
+                <th class="text-right">Last</th>
+                <th class="text-right">Change</th>
+                <th class="text-right">% Chg</th>
+              </tr>
+            </thead>
+            <tbody id="commoditiesBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tools (Intro only) -->
+    <section id="tools" class="py-8 reveal">
+      <div class="card p-6 md:p-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div class="max-w-2xl">
+            <h2 class="text-xl font-bold tracking-tight">bataSutra Tools</h2>
+            <p class="text-slate-600 mt-2">
+              Lightweight calculators that run fully in your browser. No sign-in required for basics.
+            </p>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <a href="/tools" class="px-4 py-2 rounded-lg bg-[var(--brand)] text-white font-medium hover:opacity-90">Browse Tools</a>
+            <a href="/tools#changelog" class="px-4 py-2 rounded-lg border border-gray-300 text-slate-700 font-medium hover:border-[var(--brand)] hover:text-[var(--brand-ink)]">Changelog</a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <a href="/tools/sip-planner" class="card p-5 hover:shadow-md transition group">
+            <div class="text-sm text-slate-600">Planner</div>
+            <div class="font-semibold mt-1">SIP Goal & Corpus</div>
+            <p class="text-sm text-slate-600 mt-1">Reverse-SIP to reach a target corpus or project corpus from a monthly SIP.</p>
+            <div class="text-sm font-medium text-[var(--brand-ink)] mt-2 opacity-0 group-hover:opacity-100">Open →</div>
+          </a>
+          <a href="/tools/cagr" class="card p-5 hover:shadow-md transition group">
+            <div class="text-sm text-slate-600">Calculator</div>
+            <div class="font-semibold mt-1">CAGR & Quick IRR</div>
+            <p class="text-sm text-slate-600 mt-1">Compute CAGR from start/end values or a rough IRR from simple flows.</p>
+            <div class="text-sm font-medium text-[var(--brand-ink)] mt-2 opacity-0 group-hover:opacity-100">Open →</div>
+          </a>
+          <a href="/tools/ppf-ladder" class="card p-5 hover:shadow-md transition group">
+            <div class="text-sm text-slate-600">Planner</div>
+            <div class="font-semibold mt-1">PPF & Emergency Ladder</div>
+            <p class="text-sm text-slate-600 mt-1">Plan annual contributions and build a practical liquidity runway.</p>
+            <div class="text-sm font-medium text-[var(--brand-ink)] mt-2 opacity-0 group-hover:opacity-100">Open →</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Articles -->
+    <section id="articles" class="py-8 reveal">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold tracking-tight">Latest Articles</h2>
+        <a class="text-sm font-medium text-[var(--brand-ink)] hover:underline" href="/articles">View all</a>
+      </div>
+      <div id="articlesList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+  </main>
+
+  <!-- Subscribe -->
+  <section id="subscribe" class="w-full bg-[#fdf5f5] py-16">
+    <div class="container">
+      <div class="card p-6 md:p-10 text-center">
+        <h2 class="text-3xl sm:text-4xl font-bold text-[var(--brand)]">Subscribe</h2>
+        <p class="mt-3 text-slate-700 text-base max-w-2xl mx-auto">We unpack India’s business stories—and ship tools that turn insight into action.</p>
+        <form onsubmit="subscribeUser(event)" class="mt-8 flex flex-col sm:flex-row gap-4 justify-center max-w-3xl mx-auto">
+          <input id="emailInput" type="email" placeholder="Enter your email" required class="flex-1 px-5 py-3 rounded border border-gray-300 text-sm focus:outline-none focus:ring-4 focus:ring-[var(--ring)]" />
+          <button type="submit" class="bg-[var(--brand)] text-white px-6 py-3 rounded text-sm font-medium hover:opacity-90">Subscribe</button>
+        </form>
+        <div id="subscribeMessage" class="hidden text-green-700 text-sm font-medium mt-4">✅ Subscribed successfully!</div>
+        <div id="errorMessage" class="hidden text-red-600 text-sm font-medium mt-4">⚠️ Something went wrong. Try again.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Ticker: FULL WIDTH (no highlights) -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail plain" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer (RED variant) -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
+
+    <div class="container py-10">
+      <!-- Top: brand + mission -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+            
+          </div>
+        </a>
+      </div>
+
+      <!-- Middle: link grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+        <div>
+          <div class="heading mb-3">Product</div>
+          <ul class="space-y-2">
+            <li><a href="#indices">Markets</a></li>
+            <li><a href="#heatmap">Heatmap</a></li>
+            <li><a href="#commodities">Commodities</a></li>
+            <li><a href="#articles">Articles</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">Browse Tools</a></li>
+            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/#subscribe">Newsletter</a></li>
+            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/tools#changelog">Changelog</a></li>
+            <li><a href="/articles">All articles</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Follow</div>
+          <ul class="space-y-2">
+            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
+            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom: legal row -->
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div class="muted">
+          &copy; <span id="year"></span> bataSutra. All rights reserved.
+        </div>
+        <div class="flex items-center gap-4 muted">
+          <a href="/privacy">Privacy</a>
+          <span aria-hidden="true">•</span>
+          <a href="/terms">Terms</a>
+          <span aria-hidden="true">•</span>
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ====== CONFIG ======
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
+
+    // ====== ARTICLES (local) ======
+    const ARTICLES = [
+      {
+        href: "nse-expiry-shift-to-tuesday.html",
+        title: "NSE Moves Expiry to Tuesday: Hedging & Liquidity 101",
+        blurb: "All NSE index & stock derivatives move from Thursday to Tuesday from Sep ’25—cut-over, instruments."
+      },
+      {
+        href: "sebi-longer-derivative-tenures-winners-liquidity.html",
+        title: "SEBI Signals Longer Derivative Tenures: Liquidity",
+        blurb: "Policy signal to extend derivative tenures—implications for retail outcomes, broker/exchange P&L, and market depth."
+      }
+    ];
+
+    // ====== UTILITIES ======
+    const csvUrl = (sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+
+    function parseCsv(text){
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){
+            if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; }
+          } else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ /* ignore */ }
+          else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+
+    function normKey(k){
+      return String(k||'').replace(/^\uFEFF/, '').replace(/\u00A0/g,' ').trim().replace(/\s+/g,' ').toLowerCase();
+    }
+    function pickField(row, candidates){
+      const map = new Map();
+      for (const k of Object.keys(row)) map.set(normKey(k), row[k]);
+      for (const c of candidates){
+        const v = map.get(normKey(c)); if (v != null && String(v).trim() !== '') return v;
+      }
+      const want = normKey(candidates[0]||'');
+      for (const [k,v] of map){ if (k.includes(want) && String(v).trim() !== '') return v; }
+      return undefined;
+    }
+
+    async function fetchSheetObjects(sheet, range){
+      const res = await fetch(csvUrl(sheet, range));
+      if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
+      const txt = await res.text();
+      if (txt.trim().startsWith('<')) { console.warn('Sharing error: got HTML, not CSV.'); return []; }
+      const rows = parseCsv(txt);
+      if(!rows.length) return [];
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+      return rows.slice(1)
+        .filter(r => r.some(x => (x??'').toString().trim()!==''))
+        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+    }
+
+    const fmtNum=(n,d=2)=> (n==null||n===''||!Number.isFinite(Number(n))) ? "—" : Number(n).toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d});
+    const fmtPct=p=>{ const num = Number(p); if (!Number.isFinite(num)) return "—"; const sign = num>=0?"+":""; return sign + num.toFixed(2) + "%"; };
+    function toNumLoose(x){ if (x == null) return NaN; const s = String(x).trim(); if (!s) return NaN; const cleaned = s.replace(/[,%\s]/g, ''); const n = Number(cleaned); return Number.isFinite(n) ? n : NaN; }
+
+    function badge(el,val){
+      const num = Number(val);
+      if (!Number.isFinite(num) ) { el.textContent = "—"; el.style.background = 'rgba(107,114,128,.12)'; el.style.color = '#374151'; return; }
+      el.textContent = fmtPct(num);
+      el.style.background = num>=0?'rgba(34,197,94,.12)':'rgba(239,68,68,.12)';
+      el.style.color = num>=0?'#16a34a':'#dc2626';
+    }
+
+    function heatColor(pct){
+      const v = Number(pct);
+      if(!Number.isFinite(v)) return '#f4f4f5';
+      const c=Math.max(-3,Math.min(3,v));
+      const t=(c+3)/6;
+      const r=Math.round(251*(1-t)+230*t), g=Math.round(234*(1-t)+246*t), b=Math.round(234*(1-t)+230*t);
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function sparkPath(values){
+      if(!values||!values.length) return '';
+      const nums = values.map(v=>toNumLoose(v)).filter(v=>Number.isFinite(v));
+      if(!nums.length) return '';
+      const w=100,h=30,pad=2,min=Math.min(...nums),max=Math.max(...nums),span=(max-min)||1;
+      return nums.map((v,i)=>{ const x=(i/(nums.length-1))*w; const y=h-pad-((v-min)/span)*(h-2*pad); return (i?' L':'M')+x.toFixed(2)+','+y.toFixed(2); }).join('');
+    }
+
+    // ====== RENDERERS ======
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id);
+      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.innerHTML = '';
+      const loop = [...items, ...items];
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+    }
+
+    function renderIndices(indices){
+      const grid = document.getElementById('indicesGrid');
+      const status = document.getElementById('indicesStatus');
+      grid.innerHTML = '';
+      if(!indices || !indices.length){ status.textContent = 'No data'; return; }
+      status.textContent = '';
+      indices.forEach((x, idx)=>{
+        const name = pickField(x, ['Name']);
+        const value = toNumLoose(pickField(x, ['Value']));
+        const chg   = toNumLoose(pickField(x, ['ChangePct']));
+        let sparkVals = [];
+        const sparkRaw = pickField(x, ['Spark']);
+        if (sparkRaw) sparkVals = String(sparkRaw).split(',').map(s=>s.trim());
+        else {
+          const keys = Object.keys(x).filter(k => /^s\d+$/i.test(normKey(k))).sort((a,b)=>Number(normKey(a).slice(1))-Number(normKey(b).slice(1)));
+          sparkVals = keys.map(k => x[k]).filter(Boolean);
+        }
+
+        const wrap = document.createElement('div');
+        wrap.className = 'card card-pad';
+        wrap.innerHTML = `
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-slate-600">${name || '—'}</p>
+            <span id="chg-${idx}" class="pill">—</span>
+          </div>
+          <p class="text-2xl font-bold mt-1">${fmtNum(value,2)}</p>
+          <svg class="spark w-full h-12 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <path id="spark-${idx}" d=""/>
+          </svg>
+        `;
+        grid.appendChild(wrap);
+
+        badge(document.getElementById(`chg-${idx}`), chg);
+        const p = document.getElementById(`spark-${idx}`);
+        p.setAttribute('d', sparkPath(sparkVals));
+        p.setAttribute('stroke', (Number.isFinite(chg) && chg>=0)?'#16a34a':'#dc2626');
+      });
+    }
+
+    function renderHeatmap(rows){
+      const grid = document.getElementById('heatmapGrid');
+      grid.innerHTML = '';
+      if(!rows || !rows.length) return;
+      rows.forEach(t=>{
+        const label = pickField(t, ['Label']);
+        const pct = toNumLoose(pickField(t, ['ChangePct']));
+        const a = document.createElement('div');
+        a.className = 'heat-tile';
+        a.style.background = heatColor(pct);
+        const color = (Number.isFinite(pct) && pct>=0)?'#16a34a':'#dc2626';
+        a.title = `${label || ''} ${Number.isFinite(pct)?'('+fmtPct(pct)+')':''}`;
+        a.innerHTML = `${label || '—'}<br><span class="text-xs font-normal" style="color:${Number.isFinite(pct)?color:'#6b7280'}">${fmtPct(pct)}</span>`;
+        grid.appendChild(a);
+      });
+    }
+
+    function renderCommodities(rows){
+      const tbody = document.getElementById('commoditiesBody');
+      tbody.innerHTML = '';
+      if (!Array.isArray(rows) || rows.length === 0) return;
+      rows.forEach((row, i) => {
+        const name = pickField(row, ['Name','Instrument','Commodity','Label']) || `Item ${i+1}`;
+        const last = toNumLoose(pickField(row, ['Last','Price','Close','Value']));
+        const chg  = toNumLoose(pickField(row, ['Change','Chg']));
+        const pct  = toNumLoose(pickField(row, ['Pct','PctChg','%Chg','Percent','Change%']));
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="text-left">${name}</td>
+          <td class="text-right">${fmtNum(last,2)}</td>
+          <td class="text-right ${Number.isFinite(chg) && chg>=0?'text-green-600':'text-red-600'}">${(Number.isFinite(chg)&&chg>=0?'+':'') + fmtNum(chg,2)}</td>
+          <td class="text-right ${Number.isFinite(pct) && pct>=0?'text-green-600':'text-red-600'}">${fmtPct(pct)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderArticles(rows){
+      const box = document.getElementById('articlesList');
+      box.innerHTML = '';
+      rows.forEach(a=>{
+        const href  = a.href  || a.Href;
+        const title = a.title || a.Title;
+        const blurb = a.blurb  || a.Blurb;
+        const el = document.createElement('a');
+        el.href = href;
+        el.className = 'card p-5 hover:shadow-md transition space-y-1 group';
+        el.innerHTML = `<h3 class="text-lg font-semibold">${title}</h3><p class="text-sm text-slate-600">${blurb}</p><div class="text-sm font-medium text-[var(--brand-ink)] opacity-0 group-hover:opacity-100">Read →</div>`;
+        box.appendChild(el);
+      });
+    }
+
+    // ====== SUBSCRIBE HANDLER (Apps Script) ======
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwT4FQr2Qb91fiqEgeUQMdnD5dDACtWyFnktA5MUp8sHHVebvFIOq4k3yMGKqJmlPJ_MA/exec";
+    function subscribeUser(e){
+      e.preventDefault();
+      const email=document.getElementById('emailInput').value;
+      const message=document.getElementById('subscribeMessage');
+      const error=document.getElementById('errorMessage');
+      const formData=new FormData(); formData.append("email",email);
+      fetch(scriptURL,{method:"POST",body:formData})
+        .then(r=>r.text())
+        .then(t=>{ const ok=(t||'').toLowerCase(); if(ok.includes('success')){ message.textContent = "✅ Subscribed successfully!"; message.classList.remove('hidden'); error.classList.add('hidden'); e.target.reset(); } else if(ok.includes('already')){ message.textContent="⚠️ You're already subscribed."; message.classList.remove('hidden'); error.classList.add('hidden'); } else throw new Error(t); })
+        .catch(()=>{ error.classList.remove('hidden'); message.classList.add('hidden'); });
+    }
+
+    // ====== SHEETS HYDRATION ======
+    async function hydrateFromSheets(){
+      try {
+        const headlines = await fetchSheetObjects('Headlines','A:B'); // Section, Text
+        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        renderTicker('topTicker', top, 'right');
+        renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){ console.warn('Headlines error', e); }
+
+      try {
+        const indices = await fetchSheetObjects('Indices','A:Z');   // Name, Value, ChangePct, Spark or S1..S20
+        renderIndices(indices);
+      } catch(e){ console.warn('Indices error', e); }
+
+      try {
+        const heat = await fetchSheetObjects('Heatmap','A:B');      // Label, ChangePct
+        renderHeatmap(heat);
+      } catch(e){ console.warn('Heatmap error', e); }
+
+      try {
+        const comm = await fetchSheetObjects('Commodities','A1:D'); // Name, Last, Change, Pct
+        renderCommodities(comm);
+      } catch(e){ console.warn('Commodities error', e); }
+    }
+
+    // ====== REVEAL OBSERVER ======
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('show'); });
+    }, { threshold: 0.08 });
+
+    // ====== INIT ======
+    (function init(){
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+      document.querySelectorAll('.spark path').forEach(p=>p.setAttribute('stroke','#4b5563'));
+      renderArticles(ARTICLES);
+      hydrateFromSheets().catch(console.error);
+      setInterval(()=>hydrateFromSheets().catch(console.error), 5 * 60 * 1000);
+    })();
+  </script>
+</body>
+</html>
