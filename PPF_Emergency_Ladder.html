@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>bataSutra — PPF & Emergency Ladder</title>
+  <meta name="description" content="Plan annual PPF contributions and build a practical liquidity runway. Fully client-side." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);}
+    html,body{height:100%}
+    body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
+    .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
+    .card{background:var(--card); border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+    .lift{transition:transform .15s ease, box-shadow .15s ease}
+    .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    .kicker{letter-spacing:.08em; font-weight:700; font-size:.75rem; text-transform:uppercase; color:var(--brand-ink)}
+    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.625rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem}
+    .btn-ghost{border:1px solid #e5e7eb; color:#374151}
+    .btn-ghost:hover{border-color:var(--brand); color:var(--brand-ink)}
+    .btn-primary{background:var(--brand); color:#fff}
+    .btn-primary:hover{opacity:.9}
+    .field label{font-size:.84rem; color:#334155; font-weight:600}
+    .field input, .field select{width:100%; padding:.65rem .75rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
+    .field input:focus, .field select:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
+    .muted{color:#64748b}
+    .result{font-variant-numeric:tabular-nums}
+    .hint{font-size:.8rem; color:#6b7280}
+    .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
+    .mono{font-variant-numeric:tabular-nums}
+    .ok{color:#16a34a} .bad{color:#dc2626}
+    /* Footer (Anthropic-inspired, white) */
+    .footer { background:#fff; color:#0f172a; }
+    .footer a { color:#334155; }
+    .footer a:hover { color: var(--brand-ink); }
+    .footer .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#64748b; }
+    .footer .muted { color:#64748b; }
+    .footer .divider { border-top:1px solid #e5e7eb; }
+    .footer .chip { font-size:.72rem; border:1px solid #e5e7eb; border-radius:999px; padding:.25rem .5rem; color:#334155; }
+    table.t {width:100%} table.t th, table.t td{padding:.5rem .75rem; border-bottom:1px solid #e5e7eb; font-size:.9rem}
+    table.t th{color:#334155; font-weight:700}
+    .tabs{display:flex; gap:.25rem; border-bottom:1px solid #e5e7eb; margin-bottom:1rem}
+    .tab{padding:.5rem .75rem; border-radius:.5rem .5rem 0 0; font-weight:600}
+    .tab[aria-selected="true"]{background:#fff; border:1px solid #e5e7eb; border-bottom-color:#fff}
+    .tab[aria-selected="false"]{color:#334155}
+  </style>
+</head>
+<body class="min-h-full">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <div class="container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3">
+        <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+        <div>
+          <div class="text-lg font-bold leading-tight">bataSutra</div>
+          <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
+        </div>
+      </a>
+      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
+        <a class="hover:text-[var(--brand-ink)]" href="/#indices">Markets</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#heatmap">Heatmap</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#commodities">Commodities</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/tools" aria-current="page">Tools</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#articles">Articles</a>
+      </nav>
+      <div class="hidden sm:flex items-center gap-2">
+        <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="border-b bg-white">
+    <div class="container py-8 md:py-12">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="max-w-2xl">
+          <div class="kicker mb-2">Planner</div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">PPF & Emergency Ladder</h1>
+          <p class="mt-3 text-slate-600 text-lg">Plan annual contributions and build a practical liquidity runway.</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="pill">PPF</span><span class="pill">Emergency</span><span class="pill">Runway</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
+          <a href="/tools" class="btn btn-ghost">Browse Tools</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Body -->
+  <main class="container py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- LEFT: PPF -->
+      <section class="card p-6 md:p-8 lift">
+        <div class="tabs">
+          <button class="tab" id="tab-ppf" aria-selected="true">PPF Planner</button>
+          <button class="tab" id="tab-helpers" aria-selected="false">Eligibility Helpers</button>
+        </div>
+
+        <!-- PPF Planner -->
+        <div id="ppfPane">
+          <h2 class="text-xl font-bold tracking-tight">PPF — Contributions & Growth</h2>
+          <p class="muted mt-1">Assumes each yearly contribution is deposited at the start of the financial year; interest compounds annually.</p>
+
+          <div class="mt-5 grid md:grid-cols-2 gap-4">
+            <div class="field">
+              <label for="ppfAnnual">Annual contribution (₹)</label>
+              <input id="ppfAnnual" type="number" inputmode="decimal" placeholder="e.g., 150000" min="0" step="any">
+              <div class="hint mt-1">Government cap currently ₹1.5L/year.</div>
+            </div>
+
+            <div class="field">
+              <label for="ppfYears">Years (1–15)</label>
+              <input id="ppfYears" type="number" inputmode="numeric" placeholder="15" min="1" max="15" step="1">
+            </div>
+
+            <div class="field">
+              <label for="ppfRate">Interest p.a. (%)</label>
+              <input id="ppfRate" type="number" inputmode="decimal" placeholder="7.1" step="any">
+            </div>
+
+            <div class="field">
+              <label for="ppfStart">Start FY (optional, for labels)</label>
+              <input id="ppfStart" type="number" inputmode="numeric" placeholder="2025" step="1">
+            </div>
+          </div>
+
+          <div class="mt-6 flex items-center gap-3">
+            <button id="ppfCalc" class="btn btn-primary">Calculate</button>
+            <button id="ppfReset" class="btn btn-ghost">Reset</button>
+            <button id="ppfCsv" class="btn btn-ghost">Export CSV</button>
+            <div id="ppfMsg" class="hint"></div>
+          </div>
+
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Maturity corpus</div>
+              <div id="ppfMaturity" class="result text-2xl font-bold mono">—</div>
+              <div class="muted text-sm mt-1">Total invested: <span id="ppfInvested" class="mono">—</span></div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Total interest earned</div>
+              <div id="ppfInterest" class="result text-2xl font-bold mono">—</div>
+              <div class="muted text-sm mt-1">Average yearly interest: <span id="ppfAvgInt" class="mono">—</span></div>
+            </div>
+          </div>
+
+          <div class="mt-6">
+            <h3 class="font-semibold mb-2">Yearly schedule</h3>
+            <div class="overflow-x-auto">
+              <table class="t">
+                <thead>
+                  <tr>
+                    <th class="text-left">Year</th>
+                    <th class="text-right">Contribution</th>
+                    <th class="text-right">Interest</th>
+                    <th class="text-right">End balance</th>
+                  </tr>
+                </thead>
+                <tbody id="ppfTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eligibility Helpers -->
+        <div id="helpersPane" class="hidden">
+          <h2 class="text-xl font-bold tracking-tight">PPF — Eligibility Helpers</h2>
+          <p class="muted mt-1">Based on the simulated schedule on the left. These are simplified rules to estimate limits.</p>
+
+          <div class="mt-5 grid md:grid-cols-3 gap-4">
+            <div class="field">
+              <label for="eligYear">Year # (1 = first year)</label>
+              <input id="eligYear" type="number" min="1" max="15" step="1" placeholder="7">
+              <div class="hint mt-1">For partial withdrawal, Yr must be ≥ 7. For loan, Yr ∈ [3,6].</div>
+            </div>
+            <div class="field">
+              <label for="wantAmt">Need cash (₹)</label>
+              <input id="wantAmt" type="number" inputmode="decimal" placeholder="e.g., 100000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button id="checkElig" class="btn btn-primary w-full">Check</button>
+            </div>
+          </div>
+
+          <div class="mt-6 grid sm:grid-cols-2 gap-4">
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Partial withdrawal (Yr ≥ 7)</div>
+              <div id="outWithdraw" class="result text-2xl font-bold mono">—</div>
+              <div class="hint mt-1">Rule: up to 50% of the lower of (end of Yr 4) and (end of previous year).</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Loan eligibility (Yr 3–6)</div>
+              <div id="outLoan" class="result text-2xl font-bold mono">—</div>
+              <div class="hint mt-1">Rule: up to 25% of balance at end of the 2nd year immediately preceding the loan year.</div>
+            </div>
+          </div>
+
+          <div class="mt-6 p-4 rounded-lg bg-slate-50 border">
+            <div class="kicker mb-1">Tip</div>
+            <p class="text-sm text-slate-700">
+              Try to complete the annual deposit by early April to maximize interest credit for that year. This tool assumes a start-of-year deposit for simplicity.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Emergency Ladder -->
+      <section class="card p-6 md:p-8 lift">
+        <h2 class="text-xl font-bold tracking-tight">Emergency Runway Ladder</h2>
+        <p class="muted mt-1">A simple, practical split across liquidity buckets. Target months, yields, and split are adjustable.</p>
+
+        <div class="mt-5 grid md:grid-cols-3 gap-4">
+          <div class="field">
+            <label for="exp">Monthly essential spend (₹)</label>
+            <input id="exp" type="number" inputmode="decimal" placeholder="e.g., 60000" min="0" step="any">
+          </div>
+          <div class="field">
+            <label for="months">Target months of runway</label>
+            <input id="months" type="number" inputmode="numeric" placeholder="6" min="1" step="1">
+          </div>
+          <div class="field">
+            <label for="immed">Immediate cash (months)</label>
+            <input id="immed" type="number" inputmode="numeric" placeholder="1" min="0" step="1">
+            <div class="hint mt-1">Kept in bank/sweep — instant access.</div>
+          </div>
+        </div>
+
+        <div class="mt-5 grid md:grid-cols-3 gap-4">
+          <div class="field">
+            <label for="bankYld">Bank/Sweep yield p.a. (%)</label>
+            <input id="bankYld" type="number" inputmode="decimal" placeholder="3.5" step="any">
+          </div>
+          <div class="field">
+            <label for="liqYld">Liquid fund yield p.a. (%)</label>
+            <input id="liqYld" type="number" inputmode="decimal" placeholder="6.5" step="any">
+          </div>
+          <div class="field">
+            <label for="fdYld">Short FD yield p.a. (%)</label>
+            <input id="fdYld" type="number" inputmode="decimal" placeholder="7.0" step="any">
+          </div>
+        </div>
+
+        <div class="mt-5 grid md:grid-cols-3 gap-4">
+          <div class="field">
+            <label for="splitBank">% in bank</label>
+            <input id="splitBank" type="number" inputmode="decimal" placeholder="20" step="any">
+          </div>
+          <div class="field">
+            <label for="splitLiq">% in liquid fund</label>
+            <input id="splitLiq" type="number" inputmode="decimal" placeholder="40" step="any">
+          </div>
+          <div class="field">
+            <label for="splitFD">% in short FD</label>
+            <input id="splitFD" type="number" inputmode="decimal" placeholder="40" step="any">
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button id="ladderCalc" class="btn btn-primary">Build Ladder</button>
+          <button id="ladderReset" class="btn btn-ghost">Reset</button>
+          <div id="ladderMsg" class="hint"></div>
+        </div>
+
+        <div class="mt-6 grid sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm">Total runway corpus</div>
+            <div id="ladderCorpus" class="result text-2xl font-bold mono">—</div>
+            <div class="muted text-sm mt-1">Months covered: <span id="ladderMonths" class="mono">—</span></div>
+          </div>
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm">Projected 1-yr interest</div>
+            <div id="ladderInt" class="result text-2xl font-bold mono">—</div>
+            <div class="muted text-sm mt-1">Blended yield: <span id="ladderYield" class="mono">—</span></div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h3 class="font-semibold mb-2">Bucket details</h3>
+          <div class="overflow-x-auto">
+            <table class="t">
+              <thead>
+                <tr>
+                  <th class="text-left">Bucket</th>
+                  <th class="text-right">Allocation</th>
+                  <th class="text-right">Amount (₹)</th>
+                  <th class="text-right">Yield p.a.</th>
+                  <th class="text-right">Interest / yr (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="ladderTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-lg bg-slate-50 border">
+          <div class="kicker mb-1">Rule of thumb</div>
+          <p class="text-sm text-slate-700">
+            Keep 1–2 months in bank/sweep (instant), 2–3 months in liquid funds (T+1), and the rest in short FDs or ultra-short debt (laddered) to balance access with yield.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Examples -->
+    <section class="mt-8 grid md:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <div class="kicker mb-1">PPF Examples</div>
+        <ul class="text-sm text-slate-700 list-disc pl-5">
+          <li><button class="ex btn btn-ghost mt-2" data-example="ppf1">₹1.5L/yr for 15 years @ 7.1%</button></li>
+          <li><button class="ex btn btn-ghost mt-2" data-example="ppf2">₹50k/yr for 10 years @ 7.5%</button></li>
+        </ul>
+      </div>
+      <div class="card p-5">
+        <div class="kicker mb-1">Ladder Examples</div>
+        <ul class="text-sm text-slate-700 list-disc pl-5">
+          <li><button class="ex btn btn-ghost mt-2" data-example="lad1">₹60k/mo, 6 months, 1/2/3 split</button></li>
+          <li><button class="ex btn btn-ghost mt-2" data-example="lad2">₹1L/mo, 9 months, 20/40/40 split</button></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer (Anthropic-inspired, white) -->
+  <footer class="footer text-sm mt-8">
+    <div class="footer divider"></div>
+    <div class="container py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+            <div class="text-xs muted -mt-0.5">Not just news — the <span class="chip">bata</span> behind the news</div>
+          </div>
+        </a>
+        <div class="muted max-w-xl">
+          We turn India’s business headlines into context and tools you can actually use.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+        <div>
+          <div class="heading mb-3">Product</div>
+          <ul class="space-y-2">
+            <li><a href="/#indices">Markets</a></li>
+            <li><a href="/#heatmap">Heatmap</a></li>
+            <li><a href="/#commodities">Commodities</a></li>
+            <li><a href="/#articles">Articles</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">Browse Tools</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/ppf-ladder" aria-current="page">PPF &amp; Emergency Ladder</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/#subscribe">Newsletter</a></li>
+            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/tools#changelog">Changelog</a></li>
+            <li><a href="/articles">All articles</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Follow</div>
+          <ul class="space-y-2">
+            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
+            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
+        <div class="flex items-center gap-4 muted">
+          <a href="/privacy">Privacy</a>
+          <span aria-hidden="true">•</span>
+          <a href="/terms">Terms</a>
+          <span aria-hidden="true">•</span>
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Utilities
+    const $ = s => document.querySelector(s);
+    const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
+    const toNum = v => { const n = Number(v); return Number.isFinite(n)? n : 0; };
+
+    // Footer year
+    $("#year").textContent = new Date().getFullYear();
+
+    // Tabs
+    $("#tab-ppf").addEventListener('click', ()=>{
+      $("#tab-ppf").setAttribute('aria-selected','true');
+      $("#tab-helpers").setAttribute('aria-selected','false');
+      $("#ppfPane").classList.remove('hidden');
+      $("#helpersPane").classList.add('hidden');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+    $("#tab-helpers").addEventListener('click', ()=>{
+      $("#tab-ppf").setAttribute('aria-selected','false');
+      $("#tab-helpers").setAttribute('aria-selected','true');
+      $("#ppfPane").classList.add('hidden');
+      $("#helpersPane").classList.remove('hidden');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+
+    // PPF core simulation
+    let PPF_STATE = { rows: [], invested: 0, maturity: 0, totalInt: 0 };
+
+    function simulatePPF({annual, years, rate}){
+      years = Math.max(1, Math.min(15, Math.floor(years||0)));
+      const r = (rate||0)/100;
+      const rows = [];
+      let bal = 0, invested = 0, totInt = 0;
+      for (let y=1; y<=years; y++){
+        const contrib = annual;
+        invested += contrib;
+        // start-of-year contribution then compound for the year
+        const interest = (bal + contrib) * r;
+        bal = (bal + contrib) + interest;
+        totInt += interest;
+        rows.push({year:y, contrib, interest, endBal:bal});
+      }
+      return {rows, invested, maturity: bal, totalInt: totInt};
+    }
+
+    function drawPPF(state, startFY){
+      $("#ppfMaturity").textContent = `₹ ${fmtINR(state.maturity,0)}`;
+      $("#ppfInvested").textContent = `₹ ${fmtINR(state.invested,0)}`;
+      $("#ppfInterest").textContent = `₹ ${fmtINR(state.totalInt,0)}`;
+      const avgInt = state.rows.length ? state.totalInt/state.rows.length : 0;
+      $("#ppfAvgInt").textContent = `₹ ${fmtINR(avgInt,0)} / yr`;
+
+      const tbody = $("#ppfTable"); tbody.innerHTML = '';
+      state.rows.forEach((r,i)=>{
+        const tr = document.createElement('tr');
+        const label = startFY ? `${startFY + i}-${(startFY + i + 1).toString().slice(-2)}` : `Year ${r.year}`;
+        tr.innerHTML = `
+          <td class="text-left">${label}</td>
+          <td class="text-right mono">₹ ${fmtINR(r.contrib,0)}</td>
+          <td class="text-right mono">₹ ${fmtINR(r.interest,0)}</td>
+          <td class="text-right mono">₹ ${fmtINR(r.endBal,0)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function balancesEndOfYear(){ return PPF_STATE.rows.map(r=>r.endBal); }
+
+    // PPF actions
+    $("#ppfCalc").addEventListener('click', ()=>{
+      const annual = toNum($("#ppfAnnual").value);
+      const years  = toNum($("#ppfYears").value || '15');
+      const rate   = toNum($("#ppfRate").value || '7.1');
+      const start  = toNum($("#ppfStart").value || '');
+
+      if (!(years>=1 && years<=15)){ $("#ppfMsg").textContent = 'Years must be between 1 and 15.'; return; }
+      if (!(annual>=0)){ $("#ppfMsg").textContent = 'Annual contribution must be ≥ 0.'; return; }
+
+      PPF_STATE = simulatePPF({annual, years, rate});
+      drawPPF(PPF_STATE, start || null);
+      $("#ppfMsg").textContent = 'Done.';
+      pushState();
+    });
+
+    $("#ppfReset").addEventListener('click', ()=>{
+      ["#ppfAnnual","#ppfYears","#ppfRate","#ppfStart"].forEach(s=>$(s).value='');
+      PPF_STATE = {rows:[], invested:0, maturity:0, totalInt:0};
+      drawPPF(PPF_STATE, null);
+      $("#ppfMsg").textContent='';
+      pushState();
+    });
+
+    $("#ppfCsv").addEventListener('click', ()=>{
+      if (!PPF_STATE.rows.length) return;
+      const start = toNum($("#ppfStart").value||'');
+      let csv = 'Year,Contribution,Interest,End Balance\n';
+      PPF_STATE.rows.forEach((r,i)=>{
+        const label = start ? `${start + i}-${(start + i + 1).toString().slice(-2)}` : `Year ${r.year}`;
+        csv += `${label},${Math.round(r.contrib)},${Math.round(r.interest)},${Math.round(r.endBal)}\n`;
+      });
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'ppf_schedule.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Eligibility helpers
+    function checkEligibility(){
+      const y = Math.floor(toNum($("#eligYear").value||0));
+      const need = toNum($("#wantAmt").value||0);
+      const bals = balancesEndOfYear();
+
+      let withdraw = '—';
+      let loan = '—';
+
+      // Partial withdrawal from Year >= 7:
+      if (y >= 7 && y <= bals.length){
+        const prev = bals[y-2]; // end of previous year (y-1) -> index y-2
+        const yr4  = bals[3];   // end of year 4 -> index 3
+        const base = Math.min(prev ?? 0, yr4 ?? 0);
+        const limit = 0.5 * base;
+        withdraw = `Up to ₹ ${fmtINR(limit,0)} ${need? (need<=limit?'(OK)':'(insufficient)') : ''}`;
+      } else if (y>0) {
+        withdraw = 'Not available (needs Year ≥ 7)';
+      }
+
+      // Loan from Year 3 to 6:
+      if (y >= 3 && y <= 6 && y <= bals.length){
+        const baseIdx = y - 3; // 2 years prior
+        const base = bals[baseIdx] ?? 0;
+        const limit = 0.25 * base;
+        loan = `Up to ₹ ${fmtINR(limit,0)} ${need? (need<=limit?'(OK)':'(insufficient)') : ''}`;
+      } else if (y>0) {
+        if (y<3) loan = 'Not available (starts Year 3)';
+        if (y>6) loan = 'Not available (ends Year 6)';
+      }
+
+      $("#outWithdraw").textContent = withdraw;
+      $("#outLoan").textContent = loan;
+    }
+
+    $("#checkElig").addEventListener('click', checkEligibility);
+
+    // Ladder planner
+    function buildLadder(){
+      const exp = toNum($("#exp").value);
+      const months = Math.max(1, Math.floor(toNum($("#months").value||0)));
+      const immed = Math.max(0, Math.floor(toNum($("#immed").value||0)));
+      const bankY = (toNum($("#bankYld").value||0))/100;
+      const liqY  = (toNum($("#liqYld").value||0))/100;
+      const fdY   = (toNum($("#fdYld").value||0))/100;
+      const pB = toNum($("#splitBank").value||0);
+      const pL = toNum($("#splitLiq").value||0);
+      const pF = toNum($("#splitFD").value||0);
+
+      const totalPct = pB + pL + pF;
+      if (totalPct <= 0) { $("#ladderMsg").textContent = 'Set a valid allocation split (percentages).'; return null; }
+
+      const corpus = exp * months;
+      const allocB = corpus * (pB/totalPct);
+      const allocL = corpus * (pL/totalPct);
+      const allocF = corpus * (pF/totalPct);
+
+      const intB = allocB * bankY;
+      const intL = allocL * liqY;
+      const intF = allocF * fdY;
+
+      const totalInt = intB + intL + intF;
+      const blended = corpus>0 ? (totalInt/corpus*100) : 0;
+
+      return {
+        exp, months, immed, corpus,
+        rows: [
+          {name:`Bank / Sweep (≈ ${immed} mo)`, pct: (pB/totalPct*100), amt:allocB, y:bankY*100, interest:intB},
+          {name:'Liquid Fund (T+1)', pct: (pL/totalPct*100), amt:allocL, y:liqY*100, interest:intL},
+          {name:'Short FD / Ultra-short', pct: (pF/totalPct*100), amt:allocF, y:fdY*100, interest:intF},
+        ],
+        totalInt, blended
+      };
+    }
+
+    function drawLadder(state){
+      if (!state){
+        $("#ladderCorpus").textContent='—';
+        $("#ladderMonths").textContent='—';
+        $("#ladderInt").textContent='—';
+        $("#ladderYield").textContent='—';
+        $("#ladderTable").innerHTML='';
+        return;
+      }
+      $("#ladderCorpus").textContent = `₹ ${fmtINR(state.corpus,0)}`;
+      $("#ladderMonths").textContent = `${state.months} mo`;
+      $("#ladderInt").textContent = `₹ ${fmtINR(state.totalInt,0)}`;
+      $("#ladderYield").textContent = `${state.blended.toFixed(2)}%`;
+
+      const tb = $("#ladderTable"); tb.innerHTML='';
+      state.rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="text-left">${r.name}</td>
+          <td class="text-right mono">${r.pct.toFixed(1)}%</td>
+          <td class="text-right mono">₹ ${fmtINR(r.amt,0)}</td>
+          <td class="text-right mono">${r.y.toFixed(2)}%</td>
+          <td class="text-right mono">₹ ${fmtINR(r.interest,0)}</td>
+        `;
+        tb.appendChild(tr);
+      });
+    }
+
+    $("#ladderCalc").addEventListener('click', ()=>{
+      const st = buildLadder();
+      if (!st) return;
+      drawLadder(st);
+      $("#ladderMsg").textContent = 'Done.';
+      pushState();
+    });
+
+    $("#ladderReset").addEventListener('click', ()=>{
+      ["#exp","#months","#immed","#bankYld","#liqYld","#fdYld","#splitBank","#splitLiq","#splitFD"].forEach(s=>$(s).value='');
+      drawLadder(null); $("#ladderMsg").textContent='';
+      pushState();
+    });
+
+    // Examples
+    document.querySelectorAll('.ex').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const ex = btn.dataset.example;
+        if (ex==='ppf1'){
+          $("#ppfAnnual").value='150000';
+          $("#ppfYears").value='15';
+          $("#ppfRate").value='7.1';
+          $("#ppfStart").value='2025';
+          $("#ppfCalc").click();
+        } else if (ex==='ppf2'){
+          $("#ppfAnnual").value='50000';
+          $("#ppfYears").value='10';
+          $("#ppfRate").value='7.5';
+          $("#ppfStart").value='';
+          $("#ppfCalc").click();
+        } else if (ex==='lad1'){
+          $("#exp").value='60000';
+          $("#months").value='6';
+          $("#immed").value='1';
+          $("#bankYld").value='3.5';
+          $("#liqYld").value='6.5';
+          $("#fdYld").value='7.0';
+          $("#splitBank").value='16.7'; $("#splitLiq").value='33.3'; $("#splitFD").value='50.0';
+          $("#ladderCalc").click();
+        } else if (ex==='lad2'){
+          $("#exp").value='100000';
+          $("#months").value='9';
+          $("#immed").value='2';
+          $("#bankYld").value='3.5';
+          $("#liqYld").value='6.5';
+          $("#fdYld").value='7.0';
+          $("#splitBank").value='20'; $("#splitLiq").value='40'; $("#splitFD").value='40';
+          $("#ladderCalc").click();
+        }
+        window.scrollTo({top:0, behavior:'smooth'});
+      });
+    });
+
+    // Permalinks
+    function pushState(){
+      const p = new URLSearchParams();
+      const set=(k,v)=>{ if (v!=='' && v!=null) p.set(k,v); };
+
+      // PPF
+      set('pa', $("#ppfAnnual").value);
+      set('py', $("#ppfYears").value);
+      set('pr', $("#ppfRate").value);
+      set('ps', $("#ppfStart").value);
+
+      // Helpers
+      set('ey', $("#eligYear").value);
+      set('ea', $("#wantAmt").value);
+
+      // Ladder
+      set('ex', $("#exp").value);
+      set('mo', $("#months").value);
+      set('im', $("#immed").value);
+      set('by', $("#bankYld").value);
+      set('ly', $("#liqYld").value);
+      set('fy', $("#fdYld").value);
+      set('sb', $("#splitBank").value);
+      set('sl', $("#splitLiq").value);
+      set('sf', $("#splitFD").value);
+
+      history.replaceState(null, '', '?' + p.toString());
+    }
+
+    function loadFromURL(){
+      const q = new URLSearchParams(location.search);
+      const get=(k,d='')=> q.has(k)? q.get(k) : d;
+
+      // PPF defaults
+      $("#ppfAnnual").value=get('pa','');
+      $("#ppfYears").value=get('py','15');
+      $("#ppfRate").value=get('pr','7.1');
+      $("#ppfStart").value=get('ps','');
+
+      // Helpers
+      $("#eligYear").value=get('ey','7');
+      $("#wantAmt").value=get('ea','');
+
+      // Ladder defaults
+      $("#exp").value=get('ex','');
+      $("#months").value=get('mo','6');
+      $("#immed").value=get('im','1');
+      $("#bankYld").value=get('by','3.5');
+      $("#liqYld").value=get('ly','6.5');
+      $("#fdYld").value=get('fy','7.0');
+      $("#splitBank").value=get('sb','20');
+      $("#splitLiq").value=get('sl','40');
+      $("#splitFD").value=get('sf','40');
+    }
+
+    // Copy permalink
+    $("#copyLink").addEventListener('click', async ()=>{
+      pushState();
+      try{
+        await navigator.clipboard.writeText(location.href);
+        $("#copyLink").textContent = 'Link Copied ✓';
+        setTimeout(()=> $("#copyLink").textContent='Copy Link', 1200);
+      }catch{}
+    });
+
+    // Init
+    loadFromURL();
+  </script>
+</body>
+</html>
