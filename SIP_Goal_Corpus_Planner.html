@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>bataSutra — SIP Goal & Corpus Planner</title>
+  <meta name="description" content="Reverse-SIP to reach a target corpus or estimate corpus from your monthly SIP. Fully client-side." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);}
+    html,body{height:100%}
+    body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
+    .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
+    .card{background:var(--card); border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+    .lift{transition:transform .15s ease, box-shadow .15s ease}
+    .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    .kicker{letter-spacing:.08em; font-weight:700; font-size:.75rem; text-transform:uppercase; color:var(--brand-ink)}
+    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.625rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem}
+    .btn-ghost{border:1px solid #e5e7eb; color:#374151}
+    .btn-ghost:hover{border-color:var(--brand); color:var(--brand-ink)}
+    .btn-primary{background:var(--brand); color:#fff}
+    .btn-primary:hover{opacity:.9}
+    .field label{font-size:.84rem; color:#334155; font-weight:600}
+    .field input, .field select{width:100%; padding:.65rem .75rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
+    .field input:focus, .field select:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
+    .muted{color:#64748b}
+    .result{font-variant-numeric:tabular-nums}
+    .hint{font-size:.8rem; color:#6b7280}
+    .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
+    .warn{color:#b45309}
+    .err{color:#b91c1c}
+    /* Footer (Anthropic-inspired, white) */
+    .footer { background:#fff; color:#0f172a; }
+    .footer a { color:#334155; }
+    .footer a:hover { color: var(--brand-ink); }
+    .footer .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#64748b; }
+    .footer .muted { color:#64748b; }
+    .footer .divider { border-top:1px solid #e5e7eb; }
+    .footer .chip { font-size:.72rem; border:1px solid #e5e7eb; border-radius:999px; padding:.25rem .5rem; color:#334155; }
+  </style>
+</head>
+<body class="min-h-full">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <div class="container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3">
+        <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+        <div>
+          <div class="text-lg font-bold leading-tight">bataSutra</div>
+          <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
+        </div>
+      </a>
+      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
+        <a class="hover:text-[var(--brand-ink)]" href="/#indices">Markets</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#heatmap">Heatmap</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#commodities">Commodities</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/tools" aria-current="page">Tools</a>
+        <a class="hover:text-[var(--brand-ink)]" href="/#articles">Articles</a>
+      </nav>
+      <div class="hidden sm:flex items-center gap-2">
+        <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="border-b bg-white">
+    <div class="container py-8 md:py-12">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="max-w-2xl">
+          <div class="kicker mb-2">Planner</div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">SIP Goal & Corpus Planner</h1>
+          <p class="mt-3 text-slate-600 text-lg">Reverse-SIP to reach a target corpus or estimate corpus from your monthly SIP.</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <span class="pill">SIP</span><span class="pill">Corpus</span><span class="pill">Goal</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
+          <a href="/tools" class="btn btn-ghost">Browse Tools</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Body -->
+  <main class="container py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Controls -->
+      <section class="card p-6 md:p-8 lift">
+        <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
+        <p class="muted mt-1">Pick a mode, set return assumptions, timing, and optional step-ups. All calculations run locally in your browser.</p>
+
+        <div class="mt-5 grid md:grid-cols-2 gap-4">
+          <div class="field">
+            <label for="mode">Mode</label>
+            <select id="mode">
+              <option value="goal" selected>Goal: compute required SIP</option>
+              <option value="corpus">Corpus: compute final amount</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="freq">Contribution frequency</label>
+            <select id="freq">
+              <option value="12" selected>Monthly (12/yr)</option>
+              <option value="4">Quarterly (4/yr)</option>
+              <option value="1">Annual (1/yr)</option>
+              <option value="52">Weekly (52/yr)</option>
+              <option value="365">Daily (365/yr)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="years">Duration (years)</label>
+            <input id="years" type="number" inputmode="decimal" placeholder="e.g., 10" min="0.1" step="any">
+          </div>
+
+          <div class="field">
+            <label for="rate">Expected return p.a. (%)</label>
+            <input id="rate" type="number" inputmode="decimal" placeholder="e.g., 12" step="any">
+          </div>
+
+          <div class="field">
+            <label for="timing">Contribution timing</label>
+            <select id="timing">
+              <option value="end" selected>End of period (ordinary)</option>
+              <option value="start">Start of period (annuity due)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="infl">Inflation p.a. (%) <span class="muted">(optional)</span></label>
+            <input id="infl" type="number" inputmode="decimal" placeholder="e.g., 5" step="any">
+          </div>
+        </div>
+
+        <div class="mt-6 grid md:grid-cols-2 gap-4">
+          <div class="field">
+            <label for="stepup">Step-up SIP annually (%) <span class="muted">(optional)</span></label>
+            <input id="stepup" type="number" inputmode="decimal" placeholder="e.g., 10" step="any">
+            <div class="hint mt-1">Applied once every 12 contributions.</div>
+          </div>
+
+          <div class="field">
+            <label for="lumpsum">Current corpus / lump-sum now</label>
+            <input id="lumpsum" type="number" inputmode="decimal" placeholder="e.g., 250000" min="0" step="any">
+          </div>
+        </div>
+
+        <!-- Mode-specific -->
+        <div id="goalWrap" class="mt-6 grid md:grid-cols-2 gap-4">
+          <div class="field">
+            <label for="target">Target corpus</label>
+            <input id="target" type="number" inputmode="decimal" placeholder="e.g., 10000000" min="0" step="any">
+          </div>
+          <div class="field">
+            <label for="guess">Initial SIP guess <span class="muted">(optional)</span></label>
+            <input id="guess" type="number" inputmode="decimal" placeholder="e.g., 25000" min="0" step="any">
+          </div>
+        </div>
+
+        <div id="corpusWrap" class="mt-6 grid md:grid-cols-2 gap-4 hidden">
+          <div class="field">
+            <label for="sip">SIP per contribution</label>
+            <input id="sip" type="number" inputmode="decimal" placeholder="e.g., 25000" min="0" step="any">
+          </div>
+          <div class="field">
+            <label for="startAt">Start at period # <span class="muted">(0 = now)</span></label>
+            <input id="startAt" type="number" inputmode="numeric" placeholder="0" min="0" step="1">
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center gap-3">
+          <button id="calc" class="btn btn-primary">Calculate</button>
+          <button id="reset" class="btn btn-ghost">Reset</button>
+          <div id="msg" class="hint"></div>
+        </div>
+      </section>
+
+      <!-- Results -->
+      <section class="card p-6 md:p-8 lift">
+        <h2 class="text-xl font-bold tracking-tight">Results</h2>
+        <p class="muted mt-1">Nominal values shown by default. If inflation is provided, we also show real (inflation-adjusted) estimates.</p>
+
+        <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-2 gap-4">
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm" id="resultLead">Required SIP</div>
+            <div id="outMain" class="result text-2xl font-bold">—</div>
+            <div id="outMainReal" class="result text-sm muted mt-1">—</div>
+          </div>
+
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm">Final corpus</div>
+            <div id="outCorpus" class="result text-2xl font-bold">—</div>
+            <div id="outCorpusReal" class="result text-sm muted mt-1">—</div>
+          </div>
+
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm">Total invested (SIP + lump)</div>
+            <div id="outInvested" class="result text-2xl font-bold">—</div>
+          </div>
+
+          <div class="p-4 rounded-lg border">
+            <div class="muted text-sm">Assumptions</div>
+            <div id="outAssump" class="result text-sm">—</div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-4 rounded-lg bg-slate-50 border">
+          <div class="kicker mb-1">Method</div>
+          <p class="text-sm text-slate-700">
+            Constant SIP uses the annuity formula with per-period rate \(i=\frac{r}{m}\), periods \(n=m\times Y\).
+            Final Value (FV) = lump-sum\(\cdot(1+i)^n\) + SIP\(\cdot\frac{(1+i)^n-1}{i}\cdot(1+i)^{k}\),
+            where \(k=1\) for contributions at start (annuity due) and \(k=0\) for end (ordinary).
+            Step-up SIP applies an annual increase \(g\) once every 12 contributions and is solved via bisection for Goal mode.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Examples -->
+    <section class="mt-8 grid md:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <div class="kicker mb-1">Examples</div>
+        <ul class="text-sm text-slate-700 list-disc pl-5">
+          <li><button class="ex btn btn-ghost mt-2" data-example="goal1">Goal: ₹1 Cr in 15 yrs @ 12% (monthly)</button></li>
+          <li><button class="ex btn btn-ghost mt-2" data-example="goal2">Goal + Step-up: ₹2 Cr in 20 yrs @ 12%, step-up 10%</button></li>
+          <li><button class="ex btn btn-ghost mt-2" data-example="corpus1">Corpus: ₹25k/month, 12 yrs @ 11%, lump-sum ₹2L</button></li>
+        </ul>
+      </div>
+      <div class="card p-5">
+        <div class="kicker mb-1">Tips</div>
+        <ul class="text-sm text-slate-700 list-disc pl-5">
+          <li>“Start of period” assumes each SIP compounds for one extra period vs “End of period”.</li>
+          <li>Inflation only affects the <em>display</em> (real values), not the computation path.</li>
+          <li>Step-up applies annually (after each block of 12 contributions).</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer (Anthropic-inspired, white) -->
+  <footer class="footer text-sm mt-8">
+    <div class="footer divider"></div>
+    <div class="container py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+      
+          </div>
+        </a>
+        <div class="muted max-w-xl">
+          
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+        <div>
+          <div class="heading mb-3">Product</div>
+          <ul class="space-y-2">
+            <li><a href="/#indices">Markets</a></li>
+            <li><a href="/#heatmap">Heatmap</a></li>
+            <li><a href="/#commodities">Commodities</a></li>
+            <li><a href="/#articles">Articles</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">Browse Tools</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/sip-planner" aria-current="page">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/#subscribe">Newsletter</a></li>
+            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/tools#changelog">Changelog</a></li>
+            <li><a href="/articles">All articles</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Follow</div>
+          <ul class="space-y-2">
+            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
+            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
+        <div class="flex items-center gap-4 muted">
+          <a href="/privacy">Privacy</a>
+          <span aria-hidden="true">•</span>
+          <a href="/terms">Terms</a>
+          <span aria-hidden="true">•</span>
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Utilities
+    const $ = s => document.querySelector(s);
+    const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}):'—';
+    const pct = (p)=> Number.isFinite(p)? (p).toFixed(2)+'%':'—';
+    const toNum = (v)=> { const n = Number(v); return Number.isFinite(n)? n : NaN; };
+
+    // Footer year
+    $("#year").textContent = new Date().getFullYear();
+
+    // Mode toggle
+    const modeSel = $("#mode");
+    function syncMode(){
+      const v = modeSel.value;
+      $("#goalWrap").classList.toggle('hidden', v!=='goal');
+      $("#corpusWrap").classList.toggle('hidden', v!=='corpus');
+      $("#resultLead").textContent = (v==='goal') ? 'Required SIP' : 'Given SIP';
+    }
+    modeSel.addEventListener('change', syncMode);
+
+    // Core math
+    function fvConstantSIP({sip, i, n, k}) {
+      // SIP each period, annuity factor, timing k: 0=end, 1=start
+      if (i === 0) return sip * n * Math.pow(1+i, k); // i=0 -> just count, timing still adds one period if start
+      const A = (Math.pow(1+i, n) - 1) / i;
+      return sip * A * Math.pow(1+i, k);
+    }
+
+    function fvStepupAnnual({sip0, i, n, k, step, m}) {
+      // step is annual percent (e.g. 10 -> 0.10), applied once every 12 contributions
+      // We simulate period-by-period (fast enough for browser)
+      const stepP = (Number(step)||0)/100;
+      let fv = 0;
+      let sip = sip0;
+      for (let t=0; t<n; t++){
+        // contribution at t: if start -> compounding (n - t), else (n - t - 1)
+        const power = (k===1) ? (n - t) : (n - t - 1);
+        if (power >= 0) fv += sip * Math.pow(1+i, power);
+        // after each period, possibly bump SIP if end of year-in-periods
+        if ((t+1) % 12 === 0 && stepP>0) sip *= (1 + stepP);
+      }
+      return fv;
+    }
+
+    function investedStepup({sip0, n, step}) {
+      const stepP = (Number(step)||0)/100;
+      let total = 0, sip = sip0;
+      for (let t=0; t<n; t++){
+        total += sip;
+        if ((t+1)%12===0 && stepP>0) sip *= (1+stepP);
+      }
+      return total;
+    }
+
+    function solveSIPForGoal({target, lumpsumFV, i, n, k, step, m, guess}){
+      // If no step-up -> closed form
+      if (!step || step===0){
+        const denom = (i===0) ? (n*Math.pow(1+i,k)) : ((Math.pow(1+i,n)-1)/i * Math.pow(1+i,k));
+        const need = target - lumpsumFV;
+        if (need <= 0) return 0;
+        return need / denom;
+      }
+      // Step-up -> bisection
+      const need = target - lumpsumFV;
+      if (need <= 0) return 0;
+      let lo = 0, hi = guess>0 ? guess*4 : Math.max(1000, need/n);
+      const kNum = (k==='start'||k===1)?1:0; const ii=i;
+      for (let iter=0; iter<80; iter++){
+        const mid = (lo+hi)/2;
+        const fvS = fvStepupAnnual({sip0:mid, i:ii, n, k:kNum, step, m});
+        if (fvS >= need) hi = mid; else lo = mid;
+        if (Math.abs(hi-lo) < 1e-6) return (lo+hi)/2;
+      }
+      return (lo+hi)/2;
+    }
+
+    function buildInputs(){
+      const mode = $("#mode").value;
+      const m = toNum($("#freq").value) || 12;
+      const Y = toNum($("#years").value);
+      const r = (toNum($("#rate").value)||0)/100;
+      const i = r / m;
+      const n = Math.round(m * Y);
+      const k = ($("#timing").value === 'start') ? 1 : 0;
+      const infl = (toNum($("#infl").value)||0)/100;
+      const step = toNum($("#stepup").value)||0;
+      const lump = toNum($("#lumpsum").value)||0;
+
+      const target = toNum($("#target").value);
+      const sip = toNum($("#sip").value);
+      const guess = toNum($("#guess").value)||0;
+      const startAt = Math.max(0, Math.floor(toNum($("#startAt").value)||0));
+
+      return { mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt };
+    }
+
+    function validate({mode, Y, r, n, m}){
+      if (!(Y>0)) return "Duration (years) must be > 0.";
+      if (!(m>0)) return "Frequency must be > 0.";
+      if (!Number.isFinite(r) || r<-1) return "Return must be a valid %.";
+      if (n<=0 || n> 100000) return "Total periods out of range.";
+      return "";
+    }
+
+    function compute(){
+      const inp = buildInputs();
+      const err = validate(inp);
+      const msg = $("#msg"); msg.textContent = '';
+      if (err){ msg.textContent = err; msg.className='hint err'; return null; }
+
+      const {mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt} = inp;
+
+      // Lump-sum FV
+      const lumpFV = lump * Math.pow(1+i, n);
+
+      let out = {
+        sipShow: NaN,
+        corpusNom: NaN,
+        corpusReal: NaN,
+        invested: NaN,
+        assumptions: `r=${pct(r*100)}, m=${m}/yr, n=${n}, timing=${k===1?'start':'end'}${step?`, step-up ${step}%/yr`:''}${lump?`, lump ₹${fmtINR(lump)}`:''}`
+      };
+
+      if (mode === 'goal'){
+        if (!(target>0)){ msg.textContent='Enter a positive Target corpus.'; msg.className='hint err'; return null; }
+        // find SIP needed
+        const needSIP = solveSIPForGoal({
+          target, lumpsumFV:lumpFV, i, n, k, step, m, guess
+        });
+
+        // final corpus check (nominal)
+        let fvSip;
+        if (!step){
+          fvSip = fvConstantSIP({sip:needSIP, i, n, k});
+        } else {
+          fvSip = fvStepupAnnual({sip0:needSIP, i, n, k, step, m});
+        }
+        const corpusNom = lumpFV + fvSip;
+
+        // invested total
+        const investedSip = (!step) ? (needSIP * n) : investedStepup({sip0:needSIP, n, step});
+        const invested = investedSip + lump;
+
+        // Real corpus if inflation
+        const corpusReal = infl>0 ? corpusNom / Math.pow(1+infl, Y) : NaN;
+
+        out.sipShow = needSIP;
+        out.corpusNom = corpusNom;
+        out.corpusReal = corpusReal;
+        out.invested = invested;
+
+      } else {
+        if (!(sip>=0)){ msg.textContent='Enter a SIP amount (can be 0 if using only lump-sum).'; msg.className='hint err'; return null; }
+
+        // StartAt: delay SIP until a certain period
+        let corpusSIP = 0;
+        if (!step){
+          const nEff = Math.max(0, n - startAt);
+          if (nEff>0){
+            corpusSIP = fvConstantSIP({sip, i, n:nEff, k});
+          }
+          // shift in time by startAt (contributions after some periods) -> already handled: we treat it as fewer periods
+        } else {
+          // simulate with startAt offset
+          const nEff = Math.max(0, n - startAt);
+          corpusSIP = 0;
+          let sipNow = sip;
+          for (let t=0; t<nEff; t++){
+            const power = (k===1) ? (nEff - t) : (nEff - t - 1);
+            if (power >= 0) corpusSIP += sipNow * Math.pow(i+1, power);
+            if ((t+1)%12===0 && step>0) sipNow *= (1 + step/100);
+          }
+        }
+
+        const corpusNom = lumpFV + corpusSIP;
+        const investedSip = (!step)
+          ? (sip * Math.max(0, n - startAt))
+          : investedStepup({sip0:sip, n:Math.max(0,n-startAt), step});
+        const invested = investedSip + lump;
+        const corpusReal = (inp.infl>0) ? corpusNom / Math.pow(1+inp.infl, Y) : NaN;
+
+        out.sipShow = sip;
+        out.corpusNom = corpusNom;
+        out.corpusReal = corpusReal;
+        out.invested = invested;
+      }
+
+      msg.textContent = 'Done.'; msg.className='hint';
+      return out;
+    }
+
+    function draw(out){
+      if (!out){
+        ["#outMain","#outMainReal","#outCorpus","#outCorpusReal","#outInvested","#outAssump"].forEach(id=>$(id).textContent='—');
+        return;
+      }
+      const infl = toNum($("#infl").value)||0;
+      const mode = $("#mode").value;
+      $("#outMain").textContent = (mode==='goal')
+        ? `₹ ${fmtINR(out.sipShow,0)} / period`
+        : `₹ ${fmtINR(out.sipShow,0)} / period (given)`;
+
+      $("#outMainReal").textContent = infl>0 && mode==='goal'
+        ? `Real req. SIP ≈ ₹ ${fmtINR(out.sipShow/Math.pow(1+infl/100,1),0)}*`
+        : '—';
+
+      $("#outCorpus").textContent = Number.isFinite(out.corpusNom) ? `₹ ${fmtINR(out.corpusNom,0)}` : '—';
+      $("#outCorpusReal").textContent = Number.isFinite(out.corpusReal) ? `(Real) ₹ ${fmtINR(out.corpusReal,0)}` : '—';
+      $("#outInvested").textContent = Number.isFinite(out.invested) ? `₹ ${fmtINR(out.invested,0)}` : '—';
+      $("#outAssump").textContent = out.assumptions;
+    }
+
+    // Actions
+    $("#calc").addEventListener('click', ()=>{ const out = compute(); draw(out); pushState(); });
+    $("#reset").addEventListener('click', ()=>{
+      ["#years","#rate","#infl","#stepup","#lumpsum","#target","#guess","#sip","#startAt"].forEach(s=>$(s).value='');
+      $("#freq").value='12'; $("#timing").value='end'; $("#mode").value='goal'; syncMode();
+      draw(null); $("#msg").textContent=''; pushState();
+    });
+
+    // Examples
+    document.querySelectorAll('.ex').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const ex = btn.dataset.example;
+        if (ex==='goal1'){
+          $("#mode").value='goal'; syncMode();
+          $("#freq").value='12'; $("#years").value='15'; $("#rate").value='12';
+          $("#timing").value='end'; $("#target").value='10000000'; // 1 Cr
+          $("#lumpsum").value='0'; $("#stepup").value='0'; $("#infl").value='5';
+        } else if (ex==='goal2'){
+          $("#mode").value='goal'; syncMode();
+          $("#freq").value='12'; $("#years").value='20'; $("#rate").value='12';
+          $("#timing").value='start'; $("#target").value='20000000'; // 2 Cr
+          $("#stepup").value='10'; $("#lumpsum").value='0'; $("#infl").value='5';
+        } else if (ex==='corpus1'){
+          $("#mode").value='corpus'; syncMode();
+          $("#freq").value='12'; $("#years").value='12'; $("#rate").value='11';
+          $("#timing").value='end'; $("#sip").value='25000'; $("#lumpsum").value='200000';
+          $("#startAt").value='0'; $("#stepup").value='0'; $("#infl").value='0';
+        }
+        const out = compute(); draw(out); pushState();
+        window.scrollTo({top:0, behavior:'smooth'});
+      });
+    });
+
+    // Permalinks
+    function pushState(){
+      const p = new URLSearchParams();
+      const set=(k,v)=>{ if (v!=='' && v!=null && !Number.isNaN(v)) p.set(k,v); };
+
+      set('mode', $("#mode").value);
+      set('m', $("#freq").value);
+      set('Y', $("#years").value);
+      set('r', $("#rate").value);
+      set('t', $("#timing").value);
+      set('infl', $("#infl").value);
+      set('step', $("#stepup").value);
+      set('lump', $("#lumpsum").value);
+      set('target', $("#target").value);
+      set('guess', $("#guess").value);
+      set('sip', $("#sip").value);
+      set('startAt', $("#startAt").value);
+
+      history.replaceState(null, '', '?' + p.toString());
+    }
+
+    function loadFromURL(){
+      const q = new URLSearchParams(location.search);
+      const get=(k,d='')=> q.has(k)? q.get(k): d;
+      $("#mode").value=get('mode','goal');
+      $("#freq").value=get('m','12');
+      $("#years").value=get('Y','');
+      $("#rate").value=get('r','');
+      $("#timing").value=get('t','end');
+      $("#infl").value=get('infl','');
+      $("#stepup").value=get('step','');
+      $("#lumpsum").value=get('lump','');
+      $("#target").value=get('target','');
+      $("#guess").value=get('guess','');
+      $("#sip").value=get('sip','');
+      $("#startAt").value=get('startAt','');
+      syncMode();
+    }
+
+    $("#copyLink").addEventListener('click', async ()=>{
+      pushState();
+      try{
+        await navigator.clipboard.writeText(location.href);
+        $("#copyLink").textContent = 'Link Copied ✓';
+        setTimeout(()=> $("#copyLink").textContent='Copy Link', 1200);
+      }catch{}
+    });
+
+    // Init
+    loadFromURL();
+    syncMode();
+  </script>
+</body>
+</html>
