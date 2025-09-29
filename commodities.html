@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Commodities — bataSutra</title>
+<meta name="description" content="Commodity tiles — native price & 1D % change with hover-only details. Powered by Commodities54 sheet." />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; }
+  html { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
+  body { background: var(--bg); color: var(--ink); }
+  .container { max-width: 80rem; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+
+  /* Marquee */
+  .ticker-rail { position: relative; overflow: hidden; }
+  .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+  .ticker-left  { animation: scroll-left 120s linear infinite; }
+  .ticker-right { animation: scroll-right 120s linear infinite; }
+  .ticker:hover { animation-play-state: paused; }
+  @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+  @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+  @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+  /* Grid — fixed 6 tiles per row on desktop */
+  .grid-tiles {
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0,1fr)); /* phones */
+    grid-auto-rows: 120px;
+    gap: 1rem;
+  }
+  @media (min-width: 640px){ .grid-tiles { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  @media (min-width: 768px){ .grid-tiles { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+  @media (min-width: 1024px){ .grid-tiles { grid-template-columns: repeat(6, minmax(0,1fr)); } }
+
+  .tile { border-radius: .9rem; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,.06); }
+  .tile .inner { padding: 1rem; height:100%; display:flex; flex-direction:column; justify-content:space-between; }
+  .tile .top { display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem; }
+  .tile .name { font-size:1rem; font-weight:800; line-height:1.15; letter-spacing:.01em; }
+  .tile .pill { font-weight:800; font-size:.75rem; padding:.22rem .5rem; border-radius:.45rem; background: rgba(255,255,255,.2); white-space:nowrap; }
+  .tile .meta { display:flex; align-items:center; gap:.5rem; font-size:.82rem; opacity:.95; }
+
+  /* Hover-only card */
+  .hovercard {
+    position: fixed; z-index: 60;
+    max-width: 380px; width: max-content;
+    background: #111; color:#fff;
+    border-radius: .65rem; border:1px solid rgba(255,255,255,.12);
+    box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    padding: .8rem .9rem;
+    opacity: 0; transform: translateY(4px) scale(.98);
+    transition: opacity .12s ease, transform .12s ease;
+    pointer-events: none; /* never pins */
+  }
+  .hovercard[data-show="true"] { opacity:1; transform: translateY(0) scale(1); }
+  .hovercard h4 { font-size:.95rem; font-weight:700; margin: 0 0 .2rem 0; line-height:1.25; }
+  .hovercard .grid { display:grid; grid-template-columns: auto 1fr; gap:.35rem .8rem; margin-top:.45rem; font-size:.85rem; }
+  .hovercard .label { color:#d1d5db; white-space:nowrap; }
+  .hovercard .val { color:#fff; word-break: break-word; }
+
+  /* Footer */
+  .footer-red { background: var(--brand-ink); color:#fff; }
+  .footer-red a { color: rgba(255,255,255,.92); }
+  .footer-red a:hover { color:#fff; text-decoration: underline; }
+  .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+  .footer-red .muted { color: rgba(255,255,255,.78); }
+  .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+  .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
+  .diag { background:#fff7ed; border-bottom:1px solid #fed7aa; color:#9a3412; }
+</style>
+</head>
+<body>
+  <!-- Top Ticker -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <div class="container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3">
+        <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+        <div>
+          <div class="text-lg font-bold leading-tight">bataSutra</div>
+          <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
+        </div>
+      </a>
+      <div id="countInfo" class="text-xs text-slate-600"></div>
+    </div>
+  </header>
+
+  <!-- Diagnostics -->
+  <div id="diag" class="diag hidden">
+    <div class="container py-2 text-[12px]" id="diagText"></div>
+  </div>
+
+  <!-- Main -->
+  <main class="container py-8">
+    <section class="pb-4">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Commodities</h1>
+      <p class="text-slate-600 mt-2">Native price & 1D % change.</p>
+      <div id="lastUpdated" class="text-xs text-slate-500 mt-1"></div>
+    </section>
+
+    <!-- Legend -->
+    <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3 text-xs text-slate-600">
+        <span>-5%</span>
+        <div class="legend w-48 sm:w-64 md:w-80" style="height:10px;border-radius:999px;background:linear-gradient(90deg,#dc2626,#f59e0b,#16a34a)"></div>
+        <span>+5%</span>
+      </div>
+      <div id="rangeInfo" class="text-xs text-slate-500"></div>
+    </div>
+
+    <!-- Tiles -->
+    <section class="mt-6">
+      <div id="tiles" class="grid-tiles">
+        <div class="tile" style="background:#f3f4f6"></div>
+        <div class="tile" style="background:#f3f4f6"></div>
+        <div class="tile" style="background:#f3f4f6"></div>
+        <div class="tile" style="background:#f3f4f6"></div>
+        <div class="tile" style="background:#f3f4f6"></div>
+        <div class="tile" style="background:#f3f4f6"></div>
+      </div>
+      <p id="emptyState" class="text-center text-slate-500 text-sm mt-8 hidden">No commodities found.</p>
+    </section>
+  </main>
+
+  <!-- Bottom Ticker -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail" aria-label="Bottom headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
+    <div class="container py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+            <div class="text-xs muted -mt-0.5"></div>
+          </div>
+        </a>
+        <p class="muted max-w-2xl"></p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
+        <div>
+          <div class="heading mb-3">Editorial</div>
+          <ul class="space-y-2">
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="/#indices">Indices</a></li>
+            <li><a href="/heatmap">Sector Heatmap</a></li>
+            <li><a href="/commodities">Commodities</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">All Tools</a></li>
+            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/about">About</a></li>
+            <li><a href="/advertise">Advertising</a></li>
+            <li><a href="/partnerships">Partnerships</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/methodology">Methodology</a></li>
+            <li><a href="/data-sources">Data Sources</a></li>
+            <li><a href="/editorial-policy">Editorial Policy</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Legal</div>
+          <ul class="space-y-2">
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
+        <div class="flex items-center gap-4 muted">
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Hover-only card -->
+  <div id="hoverCard" class="hovercard" aria-hidden="true">
+    <h4 id="hcTitle"></h4>
+    <div class="grid">
+      <div class="label">Ticker</div><div class="val" id="hcSym"></div>
+      <div class="label">% Change</div><div class="val" id="hcPct"></div>
+      <div class="label">Last (Native)</div><div class="val" id="hcLast"></div>
+      <div class="label">Exchange</div><div class="val" id="hcExch"></div>
+      <div class="label">Category</div><div class="val" id="hcCat"></div>
+      <div class="label">Last (INR)</div><div class="val" id="hcINR"></div>
+    </div>
+  </div>
+
+<script>
+/* ===== SHEETS ===== */
+const HEADLINES_SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // existing headlines
+const COMMO_SHEET_ID     = '1teXTyGTeArJisKZquhirLIbwLMcur1JbVLdUZHxWbsM';
+const COMMO_TAB          = 'Commodities54';
+
+/* ===== ORDER (your curated list; handles RB duplication via keys) ===== */
+const ORDER = [
+  { key:'BRN', name:'Brent Crude Oil', ticker:'BRN', cat:'energy' },
+  { key:'CL',  name:'WTI Crude Oil', ticker:'CL', cat:'energy' },
+  { key:'NG',  name:'Natural Gas (Henry Hub)', ticker:'NG', cat:'energy' },
+  { key:'RB-GAS', name:'RBOB Gasoline', ticker:'RB', cat:'energy' },
+  { key:'HO',  name:'ULSD Heating Oil', ticker:'HO', cat:'energy' },
+  { key:'G',   name:'Gasoil (Low Sulphur)', ticker:'G', cat:'energy' },
+  { key:'NBP', name:'UK Nat Gas (NBP)', ticker:'NBP', cat:'energy' },
+  { key:'TTF', name:'Dutch TTF Gas', ticker:'TTF', cat:'energy' },
+  { key:'NCF', name:'Coal (Newcastle)', ticker:'NCF', cat:'energy' },
+  { key:'API2',name:'Coal (API2 Rotterdam)', ticker:'API2', cat:'energy' },
+  { key:'PRO', name:'Propane (Mont Belvieu)', ticker:'PRO', cat:'energy' },
+  { key:'NAP', name:'Naphtha (Japan CFR)', ticker:'NAP', cat:'energy' },
+
+  { key:'GC',  name:'Gold', ticker:'GC', cat:'metals' },
+  { key:'SI',  name:'Silver', ticker:'SI', cat:'metals' },
+  { key:'PL',  name:'Platinum', ticker:'PL', cat:'metals' },
+  { key:'PA',  name:'Palladium', ticker:'PA', cat:'metals' },
+  { key:'HG',  name:'Copper', ticker:'HG', cat:'metals' },
+  { key:'AH',  name:'Aluminum (Primary)', ticker:'AH', cat:'metals' },
+  { key:'ZN',  name:'Zinc', ticker:'ZN', cat:'metals' },
+  { key:'LD',  name:'Lead', ticker:'LD', cat:'metals' },
+  { key:'NI',  name:'Nickel', ticker:'NI', cat:'metals' },
+  { key:'SN',  name:'Tin', ticker:'SN', cat:'metals' },
+  { key:'HRC', name:'Steel HRC (US Midwest)', ticker:'HRC', cat:'metals' },
+  { key:'IOR', name:'Iron Ore 62% CFR China', ticker:'IOR', cat:'metals' },
+  { key:'L3',  name:'Lithium Hydroxide CIF CJK', ticker:'L3', cat:'metals' },
+  { key:'CO',  name:'Cobalt (MB)', ticker:'CO', cat:'metals' },
+  { key:'RB-REBAR', name:'Steel Rebar (Shanghai)', ticker:'RB', cat:'metals' },
+  { key:'MO',  name:'Molybdenum', ticker:'MO', cat:'metals' },
+
+  { key:'ZC',  name:'Corn', ticker:'ZC', cat:'agri' },
+  { key:'ZS',  name:'Soybeans', ticker:'ZS', cat:'agri' },
+  { key:'ZM',  name:'Soybean Meal', ticker:'ZM', cat:'agri' },
+  { key:'ZL',  name:'Soybean Oil', ticker:'ZL', cat:'agri' },
+  { key:'ZW',  name:'Wheat (Chicago SRW)', ticker:'ZW', cat:'agri' },
+  { key:'KE',  name:'Wheat (KC HRW)', ticker:'KE', cat:'agri' },
+  { key:'MWE', name:'Wheat (Minneapolis HRS)', ticker:'MWE', cat:'agri' },
+  { key:'ZO',  name:'Oats', ticker:'ZO', cat:'agri' },
+  { key:'ZR',  name:'Rough Rice', ticker:'ZR', cat:'agri' },
+  { key:'RS',  name:'Canola', ticker:'RS', cat:'agri' },
+  { key:'RAP', name:'Rapeseed', ticker:'RAP', cat:'agri' },
+  { key:'BSW', name:'Black Sea Wheat', ticker:'BSW', cat:'agri' },
+  { key:'FCPO',name:'Palm Oil (FCPO)', ticker:'FCPO', cat:'softs' },
+  { key:'SUNOIL',name:'Sunflower Oil (indicative)', ticker:'SUNOIL', cat:'softs' },
+  { key:'SB',  name:'Sugar No.11 (Raw)', ticker:'SB', cat:'softs' },
+  { key:'W',   name:'Sugar No.5 (White)', ticker:'W', cat:'softs' },
+  { key:'KC',  name:'Coffee (Arabica)', ticker:'KC', cat:'softs' },
+  { key:'RM',  name:'Coffee (Robusta)', ticker:'RM', cat:'softs' },
+  { key:'CC',  name:'Cocoa (NY)', ticker:'CC', cat:'softs' },
+  { key:'LCC', name:'Cocoa (London)', ticker:'LCC', cat:'softs' },
+  { key:'CT',  name:'Cotton No.2', ticker:'CT', cat:'softs' },
+  { key:'OJ',  name:'Orange Juice', ticker:'OJ', cat:'softs' },
+
+  { key:'LE',  name:'Live Cattle', ticker:'LE', cat:'livestock' },
+  { key:'GF',  name:'Feeder Cattle', ticker:'GF', cat:'livestock' },
+  { key:'HE',  name:'Lean Hogs', ticker:'HE', cat:'livestock' },
+  { key:'DC',  name:'Class III Milk', ticker:'DC', cat:'dairy' },
+];
+
+/* ===== CSV ===== */
+const csvUrl = (sheetId, sheet, range) =>
+  `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+
+function parseCsv(text){
+  if ((text||'').trim().startsWith('<')) return { rows: [], isHtml:true };
+  const rows=[]; let row=[], cur='', inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inQuotes){
+      if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+      else cur+=ch;
+    } else {
+      if(ch === '"') inQuotes=true;
+      else if(ch === ','){ row.push(cur); cur=''; }
+      else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+      else if(ch === '\r'){ } else cur+=ch;
+    }
+  }
+  if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+  return { rows, isHtml:false };
+}
+
+async function fetchSheetObjects(sheetId, sheet, range){
+  const res = await fetch(csvUrl(sheetId, sheet, range));
+  if(!res.ok) throw new Error(`Sheet fetch failed: ${sheetId}/${sheet} (${res.status})`);
+  const txt = await res.text();
+  const { rows, isHtml } = parseCsv(txt);
+  if (isHtml) { const e = new Error('Sheet returned HTML (likely not public/published)'); e.code='HTML'; throw e; }
+  if(!rows.length) return [];
+  const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+  return rows.slice(1)
+    .filter(r => r.some(x => (x??'').toString().trim()!==''))
+    .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+}
+
+/* ===== HELPERS ===== */
+const pick = (obj, keys) => { for (const k of keys){ const v=obj[k]; if(v!=null && String(v).trim()!=='') return v; } const want=(keys[0]||'').toLowerCase(); for(const k of Object.keys(obj)){ if(k.toLowerCase().includes(want) && String(obj[k]).trim()!=='') return obj[k]; } return undefined; };
+
+function cleanNumStr(s){
+  if (s==null) return '';
+  return String(s)
+    .replace(/[₹,$]/g,'')
+    .replace(/\u00A0/g,' ')
+    .replace(/[()%]/g,'')
+    .replace(/[−–—]/g,'-')
+    .replace(/,/g,'')
+    .trim();
+}
+function toNum(x){
+  const s = cleanNumStr(x);
+  if (!s) return NaN;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
+}
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+
+/* color scale -5% … +5% */
+function colorForPct(pct){
+  if (!Number.isFinite(pct)) return { bg:'#e5e7eb', fg:'#111' };
+  const p = clamp(pct, -5, 5);
+  const t = (p + 5) / 10;
+  function hex(c){ return c.toString(16).padStart(2,'0'); }
+  function mix3(a,b,c,t){ if (t<=0.5){ const tt=t/0.5; return [Math.round(lerp(a[0],b[0],tt)), Math.round(lerp(a[1],b[1],tt)) , Math.round(lerp(a[2],b[2],tt))]; } const tt=(t-0.5)/0.5; return [Math.round(lerp(b[0],c[0],tt)), Math.round(lerp(b[1],c[1],tt)), Math.round(lerp(b[2],c[2],tt))]; }
+  const R=[220,38,38], A=[245,158,11], G=[22,163,74];
+  const [r,g,b] = mix3(R,A,G,t);
+  const lum = (0.2126*r + 0.7152*g + 0.0722*b)/255;
+  const fg = lum < 0.55 ? '#fff' : '#111';
+  return { bg: `#${hex(r)}${hex(g)}${hex(b)}`, fg };
+}
+
+/* ===== NORMALIZATION =====
+   Expected columns in Commodities54:
+   Name | Ticker | Exchange | Category | Quote CCY | Last_Price (Native) | 1D Change % | Last_Price (INR)
+*/
+function mapKey(sym, name){
+  const S = String(sym||'').toUpperCase();
+  if (S==='RB'){
+    if (/rebar/i.test(name)) return 'RB-REBAR';
+    if (/gasoline|rbob/i.test(name)) return 'RB-GAS';
+  }
+  const o = ORDER.find(o => o.ticker===S);
+  return o ? o.key : S || name;
+}
+
+function normRow(r){
+  const name = pick(r,['Name','Commodity','Label']) || '';
+  const sym  = (pick(r,['Ticker','Symbol']) || '').toUpperCase().trim();
+  const exch = pick(r,['Exchange']) || '';
+  const cat  = (pick(r,['Category','Group','Type']) || '').toLowerCase();
+  const ccy  = (pick(r,['Quote CCY','CCY','Currency']) || '').toUpperCase();
+
+  const lastNative = toNum(pick(r,['Last_Price (Native)','Price','Last','Value','Close']));
+  const chgp       = toNum(pick(r,['1D Change %','% Change','%Chg','ChangePct','Pct']));
+  const lastInrRaw = pick(r,['Last_Price (INR)']); // optional; show if present, but do NOT show "FX to INR"
+
+  const key = mapKey(sym, name);
+  const orderMeta = ORDER.find(o => o.key===key) || {};
+  const category = cat || orderMeta.cat || '';
+
+  // Formats
+  const lastNativeTxt = Number.isFinite(lastNative)
+    ? (ccy ? `${ccy} ${lastNative.toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})}`
+           : lastNative.toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2}))
+    : (pick(r,['Last_Price (Native)']) || '—');
+
+  const lastInrTxt = (lastInrRaw && String(lastInrRaw).trim())
+    ? String(lastInrRaw)
+    : '—';
+
+  return { key, name: name || (orderMeta.name||sym), sym, exch, category, ccy, lastNative, lastNativeTxt, chgp, lastInrTxt };
+}
+
+/* Build map by internal key */
+function indexByKey(rows){
+  const map = new Map();
+  rows.forEach(r=>{
+    const n = normRow(r);
+    if (n && n.key) map.set(n.key, n);
+  });
+  return map;
+}
+
+/* ===== UI ===== */
+function cardHTML(row, colors){
+  const pctTxt  = Number.isFinite(row.chgp) ? ((row.chgp>=0?'+':'') + row.chgp.toFixed(2) + '%') : '—';
+  return `
+    <div class="tile" style="background:${colors.bg}; color:${colors.fg}"
+      data-sym="${row.sym}"
+      data-name="${(row.name||row.sym).replace(/"/g,'&quot;')}"
+      data-pct="${pctTxt}"
+      data-last="${row.lastNativeTxt}"
+      data-exch="${row.exch||''}"
+      data-cat="${row.category||''}"
+      data-inr="${row.lastInrTxt||'—'}"
+      aria-label="${row.sym}: ${pctTxt}">
+      <div class="inner">
+        <div class="top">
+          <div class="min-w-0">
+            <div class="name truncate" title="${row.name||row.sym}">${row.sym || row.key}</div>
+            <div class="meta"><span>${row.lastNativeTxt}</span></div>
+          </div>
+          <span class="pill">${pctTxt}</span>
+        </div>
+        <div style="height:38px"></div>
+      </div>
+    </div>`;
+}
+
+/* Hover-only card controller */
+const hc = {
+  el:null, hideTo:null,
+  init(){ this.el = document.getElementById('hoverCard'); },
+  fill(tile){
+    document.getElementById('hcTitle').textContent = tile.dataset.name || tile.dataset.sym || '';
+    document.getElementById('hcSym').textContent   = tile.dataset.sym || '—';
+    document.getElementById('hcPct').textContent   = tile.dataset.pct || '—';
+    document.getElementById('hcLast').textContent  = tile.dataset.last || '—';
+    document.getElementById('hcExch').textContent  = tile.dataset.exch || '—';
+    document.getElementById('hcCat').textContent   = tile.dataset.cat || '—';
+    document.getElementById('hcINR').textContent   = tile.dataset.inr || '—';
+  },
+  position(tile){
+    const r = tile.getBoundingClientRect();
+    const vw = innerWidth, vh = innerHeight;
+    const card = this.el;
+    const cardW = Math.min(380, vw - 24);
+    let x = r.left + Math.min(16, Math.max(8, r.width*0.1));
+    let y = (r.top > vh/2) ? (r.top - 12) : (r.bottom + 12);
+    if (x + cardW + 12 > vw) x = vw - cardW - 12;
+    if (x < 12) x = 12;
+    card.style.visibility='hidden'; card.style.display='block'; card.style.width=cardW+'px';
+    const h = card.offsetHeight || 200;
+    card.style.display=''; card.style.visibility='';
+    if (r.top > vh/2 && (y - h < 8)) y = r.bottom + 12;
+    if (r.top <= vh/2 && (y + h > vh - 8)) y = r.top - 12;
+    if (y < 8) y = 8; if (y + h > vh - 8) y = vh - h - 8;
+    card.style.left = `${x}px`; card.style.top = `${y}px`;
+  },
+  show(tile){
+    if (this.hideTo){ clearTimeout(this.hideTo); this.hideTo=null; }
+    this.fill(tile); this.position(tile);
+    this.el.setAttribute('data-show','true'); this.el.setAttribute('aria-hidden','false');
+  },
+  hide(){
+    if (this.hideTo){ clearTimeout(this.hideTo); }
+    this.hideTo = setTimeout(()=>{
+      this.el.removeAttribute('data-show'); this.el.setAttribute('aria-hidden','true');
+    }, 80);
+  }
+};
+
+/* Marquee + Diagnostics */
+function renderMarquee(id, items, dir='right'){
+  const el = document.getElementById(id); if (!el) return;
+  el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+  el.innerHTML = '';
+  const loop = [...items, ...items];
+  loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+}
+function showDiag(msg){
+  const bar = document.getElementById('diag'); const txt = document.getElementById('diagText');
+  txt.textContent = msg; bar.classList.remove('hidden');
+}
+
+/* ===== DATA ===== */
+async function loadHeadlines(){
+  try {
+    const headlines = await fetchSheetObjects(HEADLINES_SHEET_ID,'Headlines','A:B');
+    const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
+    const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
+    renderMarquee('topTicker', top, 'right'); renderMarquee('bottomTicker', bottom, 'left');
+  } catch(e){ console.warn('Headlines error', e); }
+}
+
+async function loadCommodities(){
+  try {
+    const rows = await fetchSheetObjects(COMMO_SHEET_ID, COMMO_TAB, 'A:Z');
+    if (!rows.length) throw new Error('No rows from sheet');
+    return rows;
+  } catch(e){
+    console.warn('Commodities load failed:', e);
+    showDiag('Live Commodities sheet not accessible — ensure it is public & “Publish to web”. Showing demo order with neutral values.');
+    // neutral placeholders using your order
+    return ORDER.map(o => ({
+      Name:o.name, Ticker:o.ticker, Exchange:'', Category:o.cat, 'Quote CCY':'',
+      'Last_Price (Native)':'', '1D Change %':'', 'Last_Price (INR)':''
+    }));
+  }
+}
+
+/* ===== RENDER ===== */
+function renderTiles(rows){
+  const tiles = document.getElementById('tiles');
+  const empty = document.getElementById('emptyState');
+  tiles.innerHTML='';
+
+  const map = indexByKey(rows);
+
+  const ordered = ORDER.map((o)=>{
+    const found = map.get(o.key);
+    if (found) return found;
+    // synth if missing so layout keeps 6-per-row grid intact
+    return normRow({ Name:o.name, Ticker:o.ticker, Exchange:'', Category:o.cat, 'Quote CCY':'', 'Last_Price (Native)':'', '1D Change %':'', 'Last_Price (INR)':'' });
+  });
+
+  const pctVals = ordered.map(d => d.chgp).filter(Number.isFinite);
+  const lo = pctVals.length ? Math.min(...pctVals) : 0;
+  const hi = pctVals.length ? Math.max(...pctVals) : 0;
+  document.getElementById('rangeInfo').textContent = `Range: ${lo.toFixed(2)}% … ${hi.toFixed(2)}%`;
+  document.getElementById('countInfo').textContent = `${ordered.length} commodities`;
+
+  if (!ordered.length){ empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const frag = document.createDocumentFragment();
+  ordered.forEach(row=>{
+    const colors = colorForPct(row.chgp);
+    const div = document.createElement('div'); div.innerHTML = cardHTML(row, colors);
+    const tile = div.firstElementChild;
+    tile.addEventListener('mouseenter', ()=> hc.show(tile));
+    tile.addEventListener('mousemove',  ()=> hc.position(tile));
+    tile.addEventListener('mouseleave', ()=> hc.hide());
+    frag.appendChild(tile);
+  });
+  tiles.appendChild(frag);
+}
+
+/* ===== INIT ===== */
+async function hydrate(){
+  const y = document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+  hc.init();
+  await loadHeadlines();
+  const rows = await loadCommodities();
+  renderTiles(rows);
+
+  const now = new Date();
+  document.getElementById('lastUpdated').textContent =
+    `Updated ${now.toLocaleString('en-IN')} · Source: Commodities54`;
+}
+
+hydrate().catch(err => { console.error(err); showDiag('Unexpected error rendering — check sheet access or headers.'); });
+</script>
+</body>
+</html>
