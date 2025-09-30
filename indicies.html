@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Indices — bataSutra</title>
+  <meta name="description" content="Preset indices as visual cards — headline level, day change, and spark." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; }
+    html { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
+    body { background: var(--bg); color: var(--ink); }
+    .container { max-width: 80rem; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+
+    .card { background: var(--card); border:1px solid #e5e7eb; border-radius: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.08); transition: box-shadow .25s ease; }
+    .pill { font-weight:600; font-size:.75rem; padding:.25rem .5rem; border-radius:.5rem; }
+
+    /* Tickers */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+    .ticker-left  { animation: scroll-left 120s linear infinite; }
+    .ticker-right { animation: scroll-right 120s linear infinite; }
+    .ticker:hover { animation-play-state: paused; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* Spark */
+    .spark path { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+
+    /* Footer */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
+  </style>
+</head>
+<body>
+  <!-- Top Ticker -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+    <div class="container flex items-center justify-between py-3">
+      <a href="/" class="flex items-center gap-3">
+        <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+        <div>
+          <div class="text-lg font-bold leading-tight">bataSutra</div>
+          <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
+        </div>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="container py-8">
+    <section class="pb-4">
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Indices</h1>
+      <p class="text-slate-600 mt-2"></p>
+    </section>
+
+    <!-- Cards Grid (more breathing room + stable height) -->
+    <section id="gridWrap" class="mt-6">
+      <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6">
+        <!-- skeletons -->
+        <div class="card p-5 sm:p-6 min-h-40"></div>
+        <div class="card p-5 sm:p-6 min-h-40"></div>
+        <div class="card p-5 sm:p-6 min-h-40"></div>
+        <div class="card p-5 sm:p-6 min-h-40"></div>
+      </div>
+      <p id="emptyState" class="text-center text-slate-500 text-sm mt-8 hidden">No indices found.</p>
+    </section>
+  </main>
+
+  <!-- Bottom Ticker -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+   <footer class="footer-red text-sm">
+    <div class="divider"></div>
+
+    <div class="container py-10">
+      <!-- Top: brand + mission -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+            <div class="text-xs muted -mt-0.5"></div>
+          </div>
+        </a>
+        <p class="muted max-w-2xl">
+         
+        </p>
+      </div>
+
+      <!-- Middle: professional link grid (no duplicates across sections) -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
+        <!-- Editorial -->
+        <div>
+          <div class="heading mb-3">Editorial</div>
+          <ul class="space-y-2">
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+            <li><a href="/policy">Policy &amp; Regulation</a></li>
+            <li><a href="/quick-stats">Quick Stats</a></li>
+            <li><a href="/archive">Archive</a></li>
+          </ul>
+        </div>
+
+        <!-- Markets & Dashboards -->
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="#indices">Indices</a></li>
+            <li><a href="#heatmap">Sector Heatmap</a></li>
+            <li><a href="#commodities">Commodities</a></li>
+            <li><a href="/dashboards/sectors">Sector Dashboards</a></li>
+            <li><a href="/calendars/earnings">Earnings Calendar</a></li>
+            <li><a href="/trackers/ipo">IPO Tracker</a></li>
+            <li><a href="/trackers/budget">Budget Tracker</a></li>
+          </ul>
+        </div>
+
+        <!-- Tools & Calculators -->
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">All Tools</a></li>
+            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+            <li><a href="/tools/tax-old-vs-new">Tax: Old vs New Slab</a></li>
+            <li><a href="/tools/expense-runway">Expense Buckets &amp; Runway</a></li>
+            <li><a href="/tools#changelog">Changelog</a></li>
+          </ul>
+        </div>
+
+        <!-- Company -->
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/about">About</a></li>
+            <li><a href="/dashboard/whats-inside.html">Inside the Dashboard</a></li>
+            <li><a href="/advertise">Advertising &amp; Media Kit</a></li>
+            <li><a href="/partnerships">Partnerships</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/press">Press</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources/docs (methodology & policies for readers) -->
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/methodology">Methodology</a></li>
+            <li><a href="/data-sources">Data Sources</a></li>
+            <li><a href="/editorial-policy">Editorial Policy</a></li>
+            <li><a href="/corrections">Corrections</a></li>
+            <li><a href="/ethics">Ethics &amp; Independence</a></li>
+            <li><a href="/style-guide">Style Guide</a></li>
+            <li><a href="/accessibility">Accessibility</a></li>
+            <li><a href="/sitemap">Sitemap</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal (privacy, terms, compliance only here) -->
+        <div>
+          <div class="heading mb-3">Legal</div>
+          <ul class="space-y-2">
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="/cookies">Cookie Policy</a></li>
+            <li><a href="/security">Security</a></li>
+            <li><a href="/responsible-disclosure">Responsible Disclosure</a></li>
+            <li><a href="/licensing">Licensing</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom: connect + legal line (no duplicates with above) -->
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+         
+        </div>
+        <div class="muted">
+          &copy; <span id="year"></span> bataSutra. All rights reserved.
+        </div>
+        <div class="flex items-center gap-4 muted">
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ====== SHEET CONFIG ======
+    const HEADLINES_SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // tickers
+    const INDICES_SHEET_ID   = '1P935LlAZAwW6cAdLKj1LVqhnr3vwCB5_gxjpZsIsIQM'; // primary
+    const FALLBACK_SHEET_ID  = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // fallback
+    const INDEX_SHEETS = [
+      { name: 'Indices', range: 'A:Z', optional: false },
+      { name: 'Indices_Intl', range: 'A:Z', optional: true }
+    ];
+
+    // ====== CSV ======
+    const csvUrl = (sheetId, sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+
+    function parseCsv(text){
+      if ((text||'').trim().startsWith('<')) return { rows: [], isHtml:true };
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+          else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ } else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return { rows, isHtml:false };
+    }
+
+    async function fetchSheetObjects(sheetId, sheet, range){
+      const res = await fetch(csvUrl(sheetId, sheet, range));
+      if(!res.ok) throw new Error(`Sheet fetch failed: ${sheetId}/${sheet} (${res.status})`);
+      const txt = await res.text();
+      const { rows, isHtml } = parseCsv(txt);
+      if (isHtml) { const e = new Error('Sheet returned HTML (likely not shared/published)'); e.code='HTML'; throw e; }
+      if(!rows.length) return [];
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+      return rows.slice(1)
+        .filter(r => r.some(x => (x??'').toString().trim()!==''))
+        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+    }
+
+    // ====== HELPERS ======
+    const pick = (obj, keys) => { for (const k of keys){ const v=obj[k]; if(v!=null && String(v).trim()!=='') return v; } const want=(keys[0]||'').toLowerCase(); for(const k of Object.keys(obj)){ if(k.toLowerCase().includes(want) && String(obj[k]).trim()!=='') return obj[k]; } return undefined; };
+    const toNum = (x) => { if (x==null) return NaN; const s=String(x).trim(); if(!s) return NaN; const n=Number(s.replace(/[,%\s]/g,'')); return Number.isFinite(n)?n:NaN; };
+    const fmtNum=(n,d=2)=> (n==null||n===''||!Number.isFinite(Number(n))) ? "—" : Number(n).toLocaleString('en-IN',{maximumFractionDigits:d,minimumFractionDigits:d});
+
+    function familyDetect(name=''){
+      const s = String(name).toLowerCase();
+      if (/sensex|nifty\s?50|banknifty|nifty bank|nifty next 50|s&p\s?500|dow|nasdaq|ftse|dax|cac|nikkei|hang\s*seng|kospi|asx|sse|sti|msci world/.test(s)) return 'benchmark';
+      if (/(midcap|smallcap|microcap|nifty\s?(100|200|500)|bse\s?(100|200|500)|top\s?(100|200))/.test(s)) return 'broad';
+      if (/(auto|it|fmcg|pharma|realty|metal|psu|pse|energy|media|infra|fin|bank)/.test(s)) return 'sectoral';
+      return 'sectoral';
+    }
+    function marketDetect(row){
+      const explicit = (pick(row, ['Market','Region','Country'])||'').toString().toLowerCase();
+      if (/india|nse|bse/.test(explicit)) return 'india';
+      if (/us|united states|nyse|nasdaq|s&p/.test(explicit)) return 'us';
+      if (/europe|eu|uk|ftse|dax|cac|stoxx/.test(explicit)) return 'europe';
+      if (/asia|japan|nikkei|china|shanghai|shenzhen|hk|hang\s*seng|kospi|taiwan|australia|asx|singapore|sti|apac/.test(explicit)) return 'asia-pac';
+      if (/global|world|acwi/.test(explicit)) return 'global';
+      const name = (pick(row, ['Name','Index','Label'])||'').toString().toLowerCase();
+      if (/sensex|nifty|bse/.test(name)) return 'india';
+      if (/s&p\s?500|spx|dow|djia|nasdaq|ndx|comp/.test(name)) return 'us';
+      if (/ftse|dax|cac|stoxx/.test(name)) return 'europe';
+      if (/nikkei|hang\s*seng|kospi|asx|sse|sti|taiwan/.test(name)) return 'asia-pac';
+      if (/msci\s?world|acwi/.test(name)) return 'global';
+      return 'global';
+    }
+
+    function sparkPath(values){
+      if(!values||!values.length) return '';
+      const nums = values.map(v=>toNum(v)).filter(v=>Number.isFinite(v));
+      if(!nums.length) return '';
+      const w=100,h=30,pad=2,min=Math.min(...nums),max=Math.max(...nums),span=(max-min)||1;
+      return nums.map((v,i)=>{ const x=(i/(nums.length-1))*w; const y=h-pad-((v-min)/span)*(h-2*pad); return (i?' L':'M')+x.toFixed(2)+','+y.toFixed(2); }).join('');
+    }
+
+    function normRow(r){
+      const name = pick(r,['Name','Index','Label']) || '—';
+      const last = toNum(pick(r,['Value','Last','Close']));
+      const chgp = toNum(pick(r,['ChangePct','%Chg','Pct']));
+      const fam = (pick(r,['Family','Type']) || familyDetect(name)).toString().toLowerCase();
+      const market = marketDetect(r);
+      const sparkStr = (() => {
+        const keys = Object.keys(r);
+        const k = keys.find(x => x.toLowerCase()==='spark_1d');
+        if (k && r[k]) return String(r[k]);
+        const generic = pick(r,['Spark']); if (generic) return String(generic);
+        const sKeys = keys.filter(k => /^s\d+$/i.test(k.trim())).sort((a,b)=>Number(a.slice(1))-Number(b.slice(1)));
+        return sKeys.map(k => r[k]).filter(Boolean).join(',');
+      })();
+      const sparkVals = sparkStr.split(',').map(s=>s.trim()).filter(Boolean);
+      return { name, last, chgp, fam, market, sparkVals };
+    }
+
+    function cardHTML(row, i){
+      const id = `i${i}`;
+      const pct = Number(row.chgp);
+      const stroke = Number.isFinite(pct)&&pct>=0?'#16a34a':'#dc2626';
+      return `
+        <div class="card p-5 sm:p-6 min-h-40">
+          <div class="flex items-start justify-between gap-3">
+            <!-- LEFT: title/value (truncate-safe) -->
+            <div class="min-w-0">
+              <p class="text-sm text-slate-600 truncate" title="${row.name}">${row.name}</p>
+              <p class="text-2xl font-bold mt-1 leading-tight tracking-tight whitespace-nowrap">${fmtNum(row.last,2)}</p>
+            </div>
+            <!-- RIGHT: pill -->
+            <span id="pill-${id}" class="pill shrink-0">—</span>
+          </div>
+
+          <!-- SPARK with larger top margin for breathing room -->
+          <svg class="spark block w-full h-14 mt-3 pointer-events-none" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <path id="spark-${id}" d="" stroke="${stroke}"/>
+          </svg>
+
+          <!-- META row wraps safely -->
+          <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            <span class="capitalize">${row.market.replace('-', ' ')}</span>
+            <span>•</span>
+            <span class="capitalize">${row.fam.replace('-', ' ')}</span>
+          </div>
+        </div>`;
+    }
+
+    function paintCard(row, i){
+      const id = `i${i}`;
+      const path = sparkPath(row.sparkVals.map(toNum));
+      const p = document.getElementById(`spark-${id}`);
+      if (p && path) p.setAttribute('d', path);
+
+      const pillEl = document.getElementById(`pill-${id}`);
+      const num = Number(row.chgp);
+      if (!pillEl) return;
+      if (!Number.isFinite(num)) {
+        pillEl.textContent = '—';
+        pillEl.style.background = 'rgba(107,114,128,.12)';
+        pillEl.style.color = '#374151';
+        return;
+      }
+      pillEl.textContent = (num>=0?'+':'') + num.toFixed(2) + '%';
+      pillEl.style.background = num>=0 ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)';
+      pillEl.style.color = num>=0 ? '#16a34a' : '#dc2626';
+    }
+
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.innerHTML = '';
+      const loop = [...items, ...items];
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+    }
+
+    function showBanner(msg){
+      let bar = document.getElementById('diagBanner');
+      if (!bar){
+        bar = document.createElement('div');
+        bar.id = 'diagBanner';
+        bar.className = 'w-full bg-amber-50 border-b border-amber-200 text-amber-800';
+        bar.innerHTML = `<div class="container py-2 text-[12px]">${msg}</div>`;
+        document.body.prepend(bar);
+      } else {
+        bar.querySelector('.container').textContent = msg;
+        bar.style.display = 'block';
+      }
+    }
+
+    async function loadIndices(){
+      try {
+        const merged = [];
+        for (const s of INDEX_SHEETS){
+          try {
+            const part = await fetchSheetObjects(INDICES_SHEET_ID, s.name, s.range);
+            merged.push(...part);
+          } catch (e) {
+            if (!s.optional) throw e;
+            console.warn(`[optional] ${s.name} failed`, e);
+          }
+        }
+        if (!merged.length) throw new Error('No data rows from new workbook');
+        return { rows: merged, source: 'new' };
+      } catch (e) {
+        console.warn('New workbook failed:', e.message || e);
+        showBanner('Using fallback indices (original sheet). Tip: make the new indices workbook public & publish to the web for live load.');
+        const part = await fetchSheetObjects(FALLBACK_SHEET_ID, 'Indices', 'A:Z');
+        return { rows: part, source: 'fallback' };
+      }
+    }
+
+    function renderCards(rows){
+      const grid = document.getElementById('grid');
+      const empty = document.getElementById('emptyState');
+      grid.innerHTML = '';
+      if (!rows.length){ empty.classList.remove('hidden'); document.getElementById('countInfo').textContent = '0 indices'; return; }
+      empty.classList.add('hidden');
+
+      const data = rows.map(normRow);
+      data.forEach((row,i)=> grid.insertAdjacentHTML('beforeend', cardHTML(row,i)));
+      data.forEach((row,i)=> paintCard(row,i));
+      document.getElementById('countInfo').textContent = `${data.length} indices`;
+    }
+
+    async function hydrate(){
+      const y = document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+
+      try {
+        const headlines = await fetchSheetObjects(HEADLINES_SHEET_ID,'Headlines','A:B');
+        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        renderTicker('topTicker', top, 'right');
+        renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){ console.warn('Headlines error', e); }
+
+      const { rows, source } = await loadIndices();
+      renderCards(rows);
+
+      const now = new Date();
+      document.getElementById('lastUpdated').textContent =
+        `Updated ${now.toLocaleString('en-IN')} · Source: ${source === 'new' ? 'new workbook' : 'fallback (original)'}`;
+    }
+
+    hydrate().catch(console.error);
+  </script>
+</body>
+</html>
