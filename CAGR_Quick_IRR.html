@@ -8,10 +8,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);}
+    :root{
+      --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);
+      --space:1.25rem;
+    }
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
     .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
+    @media (min-width:768px){ .container{padding-left:1.25rem; padding-right:1.25rem;} }
+    @media (min-width:1024px){ .container{padding-left:1.5rem; padding-right:1.5rem;} }
+
+    /* Cards & tokens */
     .card{background:var(--card); border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04);}
     .lift{transition:transform .15s ease, box-shadow .15s ease}
     .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
@@ -21,21 +28,63 @@
     .btn-ghost:hover{border-color:var(--brand); color:var(--brand-ink)}
     .btn-primary{background:var(--brand); color:#fff}
     .btn-primary:hover{opacity:.9}
-    .srch:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring)}
     .field label{font-size:.84rem; color:#334155; font-weight:600}
-    .field input, .field select, .field textarea{width:100%; padding:.65rem .75rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
+    .field input, .field select, .field textarea{width:100%; padding:.7rem .8rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
     .field input:focus, .field select:focus, .field textarea:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
     .muted{color:#64748b}
     .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
     .result{font-variant-numeric:tabular-nums}
-    .warn{color:#b45309}
-    .err{color:#b91c1c}
     .hint{font-size:.8rem; color:#6b7280}
-    .kbd{background:#f1f5f9; border:1px solid #e5e7eb; padding:.1rem .35rem; border-radius:.3rem; font-size:.72rem}
+    .err{color:#b91c1c}
+
+    /* Flow rhythm */
+    .flow > * + *{ margin-top: var(--space); }
+    .flow-sm > * + *{ margin-top: calc(var(--space) * .66); }
+    .card .flow > * + *{ margin-top: 1rem; }
+
+    /* Grid gap normalization */
+    .main-grid{ gap:1rem; } @media (min-width:640px){ .main-grid{ gap:1.25rem; } } @media (min-width:1024px){ .main-grid{ gap:1.75rem; } } @media (min-width:1280px){ .main-grid{ gap:2rem; } }
+    .section{ padding-top:1.25rem; padding-bottom:1.25rem; } @media (min-width:768px){ .section{ padding-top:1.75rem; padding-bottom:1.75rem; } } @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
+    .measure{ max-width: 68ch; }
+
+    /* ===== TICKERS (from provided snippet) ===== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
+    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail.plain::before, .ticker-rail.plain::after { display: none; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+    .ticker-left  { animation: scroll-left 120s linear infinite; }
+    .ticker-right { animation: scroll-right 120s linear infinite; }
+    .ticker:hover { animation-play-state: paused; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* ===== Footer (red, Anthropic-inspired) ===== */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
   </style>
 </head>
 <body class="min-h-full">
-  <!-- Header -->
+  <!-- ===== Top Ticker (full width) ===== -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Header / Nav (updated) ===== -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -45,28 +94,22 @@
           <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
         </div>
       </a>
-      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
-        <a class="hover:text-[var(--brand-ink)]" href="/#indices">Markets</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#heatmap">Heatmap</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#commodities">Commodities</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/tools" aria-current="page">Tools</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#articles">Articles</a>
-      </nav>
+      
       <div class="hidden sm:flex items-center gap-2">
         <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
+  <!-- ===== Hero ===== -->
   <section class="border-b bg-white">
-    <div class="container py-8 md:py-12">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="max-w-2xl">
-          <div class="kicker mb-2">Calculator</div>
+    <div class="container section">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 lg:gap-8">
+        <div class="max-w-2xl flow-sm">
+          <div class="kicker">Calculator</div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">CAGR & Quick IRR</h1>
-          <p class="mt-3 text-slate-600 text-lg">Compute CAGR from start/end values or get a rough IRR from simple, equal-interval cashflows.</p>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <p class="text-slate-600 text-lg measure">Compute CAGR from start/end values or get a rough IRR from simple, equal-interval cashflows.</p>
+          <div class="flex flex-wrap gap-2">
             <span class="pill">CAGR</span><span class="pill">IRR</span>
           </div>
         </div>
@@ -78,208 +121,352 @@
     </div>
   </section>
 
-  <!-- Body -->
-  <main class="container py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- ===== Main ===== -->
+  <main class="container section">
+    <div class="grid grid-cols-1 lg:grid-cols-2 main-grid">
       <!-- CAGR Card -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">CAGR</h2>
-        <p class="muted mt-1">Given start value, end value, and time, compute the compound annual growth rate.</p>
+        <div class="flow">
+          <header class="flow-sm">
+            <h2 class="text-xl font-bold tracking-tight">CAGR</h2>
+            <p class="muted">Given start value, end value, and time, compute the compound annual growth rate.</p>
+          </header>
 
-        <div class="mt-5 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="cagrStart">Start value</label>
-            <input id="cagrStart" type="number" inputmode="decimal" placeholder="e.g., 100000" min="0" step="any">
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="cagrStart">Start value</label>
+              <input id="cagrStart" type="number" inputmode="decimal" placeholder="e.g., 100000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="cagrEnd">End value</label>
+              <input id="cagrEnd" type="number" inputmode="decimal" placeholder="e.g., 145000" min="0" step="any">
+            </div>
           </div>
-          <div class="field">
-            <label for="cagrEnd">End value</label>
-            <input id="cagrEnd" type="number" inputmode="decimal" placeholder="e.g., 145000" min="0" step="any">
-          </div>
-        </div>
 
-        <div class="mt-4 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="timeMode">Time mode</label>
-            <select id="timeMode">
-              <option value="years" selected>Years (enter years directly)</option>
-              <option value="dates">Dates (compute years between two dates)</option>
-            </select>
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="timeMode">Time mode</label>
+              <select id="timeMode">
+                <option value="years" selected>Years (enter years directly)</option>
+                <option value="dates">Dates (compute years between two dates)</option>
+              </select>
+            </div>
+            <div id="yearsWrap" class="field">
+              <label for="cagrYears">Years</label>
+              <input id="cagrYears" type="number" inputmode="decimal" placeholder="e.g., 3" min="0.0001" step="any">
+              <div class="hint mt-1">Use decimals for months (e.g., 2.5 years)</div>
+            </div>
           </div>
-          <div id="yearsWrap" class="field">
-            <label for="cagrYears">Years</label>
-            <input id="cagrYears" type="number" inputmode="decimal" placeholder="e.g., 3" min="0.0001" step="any">
-            <div class="hint mt-1">Use decimals for months (e.g., 2.5 years)</div>
-          </div>
-        </div>
 
-        <div id="dateWrap" class="mt-4 grid md:grid-cols-2 gap-4 hidden">
-          <div class="field">
-            <label for="dateStart">Start date</label>
-            <input id="dateStart" type="date">
+          <div id="dateWrap" class="grid md:grid-cols-2 gap-4 lg:gap-5 hidden">
+            <div class="field">
+              <label for="dateStart">Start date</label>
+              <input id="dateStart" type="date">
+            </div>
+            <div class="field">
+              <label for="dateEnd">End date</label>
+              <input id="dateEnd" type="date">
+            </div>
           </div>
-          <div class="field">
-            <label for="dateEnd">End date</label>
-            <input id="dateEnd" type="date">
-          </div>
-        </div>
 
-        <div class="mt-5 flex items-center gap-3">
-          <button id="calcCAGR" class="btn btn-primary">Calculate</button>
-          <button id="resetCAGR" class="btn btn-ghost">Reset</button>
-          <div id="cagrMsg" class="hint"></div>
-        </div>
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button id="calcCAGR" class="btn btn-primary">Calculate</button>
+            <button id="resetCAGR" class="btn btn-ghost">Reset</button>
+            <div id="cagrMsg" class="hint"></div>
+          </div>
 
-        <div class="mt-6 grid sm:grid-cols-3 gap-4">
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">CAGR</div>
-            <div id="cagrOut" class="result text-2xl font-bold">—</div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Total return</div>
-            <div id="totalReturnOut" class="result text-2xl font-bold">—</div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Years</div>
-            <div id="yearsOut" class="result text-2xl font-bold">—</div>
+          <div class="grid sm:grid-cols-3 gap-4 lg:gap-5">
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">CAGR</div>
+              <div id="cagrOut" class="result text-2xl font-bold">—</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Total return</div>
+              <div id="totalReturnOut" class="result text-2xl font-bold">—</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Years</div>
+              <div id="yearsOut" class="result text-2xl font-bold">—</div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Quick IRR Card -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">Quick IRR</h2>
-        <p class="muted mt-1">For equal-interval cashflows. Use either the guided mode (initial + contributions + final) or paste a short series.</p>
+        <div class="flow">
+          <header class="flow-sm">
+            <h2 class="text-xl font-bold tracking-tight">Quick IRR</h2>
+            <p class="muted">For equal-interval cashflows. Use either the guided mode (initial + contributions + final) or paste a short series.</p>
+          </header>
 
-        <div class="mt-4 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="freq">Frequency</label>
-            <select id="freq">
-              <option value="1">Annual</option>
-              <option value="4">Quarterly</option>
-              <option value="12" selected>Monthly</option>
-              <option value="52">Weekly</option>
-              <option value="365">Daily</option>
-            </select>
-            <div class="hint mt-1">Used only for annualizing IRR.</div>
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="freq">Frequency</label>
+              <select id="freq">
+                <option value="1">Annual</option>
+                <option value="4">Quarterly</option>
+                <option value="12" selected>Monthly</option>
+                <option value="52">Weekly</option>
+                <option value="365">Daily</option>
+              </select>
+              <div class="hint mt-1">Used only for annualizing IRR.</div>
+            </div>
+            <div class="field">
+              <label for="mode">Input mode</label>
+              <select id="mode">
+                <option value="guided" selected>Guided (init + contributions + final)</option>
+                <option value="series">Series (comma-separated)</option>
+              </select>
+            </div>
           </div>
-          <div class="field">
-            <label for="mode">Input mode</label>
-            <select id="mode">
-              <option value="guided" selected>Guided (init + contributions + final)</option>
-              <option value="series">Series (comma-separated)</option>
-            </select>
-          </div>
-        </div>
 
-        <!-- Guided mode -->
-        <div id="guidedWrap" class="mt-4 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="initOutflow">Initial outflow (negative)</label>
-            <input id="initOutflow" type="number" inputmode="decimal" placeholder="-100000" step="any">
-            <div class="hint mt-1">Example: -100000</div>
+          <!-- Guided mode -->
+          <div id="guidedWrap" class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="initOutflow">Initial outflow (negative)</label>
+              <input id="initOutflow" type="number" inputmode="decimal" placeholder="-100000" step="any">
+              <div class="hint mt-1">Example: -100000</div>
+            </div>
+            <div class="field">
+              <label for="contribution">Equal contribution per period</label>
+              <input id="contribution" type="number" inputmode="decimal" placeholder="0" step="any">
+              <div class="hint mt-1">Use 0 if none (e.g., lumpsum only)</div>
+            </div>
+            <div class="field">
+              <label for="periods"># of contribution periods</label>
+              <input id="periods" type="number" inputmode="numeric" placeholder="12" min="0" step="1">
+            </div>
+            <div class="field">
+              <label for="finalValue">Final value at end</label>
+              <input id="finalValue" type="number" inputmode="decimal" placeholder="145000" step="any">
+            </div>
           </div>
-          <div class="field">
-            <label for="contribution">Equal contribution per period</label>
-            <input id="contribution" type="number" inputmode="decimal" placeholder="0" step="any">
-            <div class="hint mt-1">Use 0 if none (e.g., lumpsum only)</div>
-          </div>
-          <div class="field">
-            <label for="periods"># of contribution periods</label>
-            <input id="periods" type="number" inputmode="numeric" placeholder="12" min="0" step="1">
-          </div>
-          <div class="field">
-            <label for="finalValue">Final value at end</label>
-            <input id="finalValue" type="number" inputmode="decimal" placeholder="145000" step="any">
-          </div>
-        </div>
 
-        <!-- Series mode -->
-        <div id="seriesWrap" class="mt-4 hidden">
-          <div class="field">
-            <label for="series">Cashflow series (comma separated, equal intervals)</label>
-            <textarea id="series" rows="3" placeholder="-100000, 10000, 10000, 10000, 145000"></textarea>
-            <div class="hint mt-1">Convention: outflows negative, inflows positive. The last term can be your final value.</div>
+          <!-- Series mode -->
+          <div id="seriesWrap" class="hidden">
+            <div class="field">
+              <label for="series">Cashflow series (comma separated, equal intervals)</label>
+              <textarea id="series" rows="4" placeholder="-100000, 10000, 10000, 10000, 145000"></textarea>
+              <div class="hint mt-1">Convention: outflows negative, inflows positive. The last term can be your final value.</div>
+            </div>
           </div>
-        </div>
 
-        <div class="mt-5 flex items-center gap-3">
-          <button id="calcIRR" class="btn btn-primary">Calculate IRR</button>
-          <button id="resetIRR" class="btn btn-ghost">Reset</button>
-          <div id="irrMsg" class="hint"></div>
-        </div>
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <button id="calcIRR" class="btn btn-primary">Calculate IRR</button>
+            <button id="resetIRR" class="btn btn-ghost">Reset</button>
+            <div id="irrMsg" class="hint"></div>
+          </div>
 
-        <div class="mt-6 grid sm:grid-cols-3 gap-4">
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">IRR (per period)</div>
-            <div id="irrPerPeriod" class="result text-2xl font-bold">—</div>
+          <div class="grid sm:grid-cols-3 gap-4 lg:gap-5">
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">IRR (per period)</div>
+              <div id="irrPerPeriod" class="result text-2xl font-bold">—</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Annualized IRR</div>
+              <div id="irrAnnual" class="result text-2xl font-bold">—</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">NPV @ IRR</div>
+              <div id="npvAtIrr" class="result text-2xl font-bold">—</div>
+            </div>
           </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Annualized IRR</div>
-            <div id="irrAnnual" class="result text-2xl font-bold">—</div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">NPV @ IRR</div>
-            <div id="npvAtIrr" class="result text-2xl font-bold">—</div>
-          </div>
-        </div>
 
-        <div class="mt-4 text-xs text-slate-500">
-          Notes: “Quick IRR” assumes <em>equal time spacing</em> between entries. For irregular dates, use a full XIRR tool.
+          <div class="text-xs text-slate-500 measure">
+            Notes: “Quick IRR” assumes <em>equal time spacing</em> between entries. For irregular dates, use a full XIRR tool.
+          </div>
         </div>
       </section>
     </div>
-
-    <!-- Examples -->
-    <section class="mt-8 grid md:grid-cols-2 gap-6">
-      <div class="card p-5">
-        <div class="kicker mb-1">Examples</div>
-        <ul class="text-sm text-slate-700 list-disc pl-5">
-          <li><button class="ex btn btn-ghost mt-2" data-example="cagr1">CAGR: 1,00,000 → 1,45,000 over 3 years</button></li>
-          <li><button class="ex btn btn-ghost mt-2" data-example="irr1">IRR: -1,00,000 upfront, +10,000 monthly for 12 months, final 1,45,000</button></li>
-          <li><button class="ex btn btn-ghost mt-2" data-example="irr2">IRR (series): -1,00,000, 10,000×12, 1,45,000</button></li>
-        </ul>
-      </div>
-      <div class="card p-5">
-        <div class="kicker mb-1">Method</div>
-        <p class="text-sm text-slate-700">
-          CAGR = \((\text{End} / \text{Start})^{1/\text{Years}} - 1\). IRR is solved via bracketed bisection on NPV, bounded \([-0.9999, 10]\) per period, tolerance \(1e{-7}\).
-          Annualized using frequency \(m\): \((1+r_{period})^{m}-1\).
-        </p>
-      </div>
-    </section>
   </main>
 
-  <!-- Footer -->
-  <footer class="bg-[var(--brand-ink)] text-white text-sm mt-8">
-    <div class="container py-6 text-center">
-      <p>&copy; <span id="year"></span> bataSutra. All rights reserved.</p>
-      <a class="underline hover:no-underline block mt-2" href="/careers">Careers</a>
+  <!-- ===== Bottom Ticker (full width) ===== -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail plain" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer (updated, non-redundant) ===== -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
+    <div class="container py-10">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <a href="/" class="flex items-center gap-3">
+          <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
+          <div>
+            <div class="text-lg font-bold leading-tight">bataSutra</div>
+            <div class="text-xs muted -mt-0.5"></div>
+          </div>
+        </a>
+        <p class="muted max-w-2xl"></p>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
+        <div>
+          <div class="heading mb-3">Editorial</div>
+          <ul class="space-y-2">
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+            <li><a href="/policy">Policy &amp; Regulation</a></li>
+            <li><a href="/quick-stats">Quick Stats</a></li>
+            <li><a href="/archive">Archive</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="/indices.html">Indices</a></li>
+            <li><a href="/heatmap.html">Sector Heatmap</a></li>
+            <li><a href="/commodities.html">Commodities</a></li>
+            <li><a href="/dashboards/sectors">Sector Dashboards</a></li>
+            <li><a href="/calendars/earnings">Earnings Calendar</a></li>
+            <li><a href="/trackers/ipo">IPO Tracker</a></li>
+            <li><a href="/trackers/budget">Budget Tracker</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Tools</div>
+          <ul class="space-y-2">
+            <li><a href="/tools">All Tools</a></li>
+            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+            <li><a href="/tools/tax-old-vs-new">Tax: Old vs New Slab</a></li>
+            <li><a href="/tools/expense-runway">Expense Buckets &amp; Runway</a></li>
+            <li><a href="/tools#changelog">Changelog</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Company</div>
+          <ul class="space-y-2">
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/inside-the-dashboard.html">Inside the Dashboard</a></li>
+            <li><a href="/advertise">Advertising &amp; Media Kit</a></li>
+            <li><a href="/partnerships.html">Partnerships</a></li>
+            <li><a href="/careers.html">Careers</a></li>
+            <li><a href="/contact.html">Contact</a></li>
+            <li><a href="/press">Press</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Resources</div>
+          <ul class="space-y-2">
+            <li><a href="/methodology.html">Methodology</a></li>
+            <li><a href="/data-sources.html">Data Sources</a></li>
+            <li><a href="/editorial-policy.html">Editorial Policy</a></li>
+            <li><a href="/corrections.html">Corrections</a></li>
+            <li><a href="/ethics">Ethics &amp; Independence</a></li>
+            <li><a href="/style-guide">Style Guide</a></li>
+            <li><a href="/accessibility">Accessibility</a></li>
+            <li><a href="/sitemap">Sitemap</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="heading mb-3">Legal</div>
+          <ul class="space-y-2">
+            <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="/terms-of-services.html">Terms of Service</a></li>
+            <li><a href="/cookie-policy.html">Cookie Policy</a></li>
+            <li><a href="/security.html">Security</a></li>
+            <li><a href="/responsible-disclosure.html">Responsible Disclosure</a></li>
+            <li><a href="/licensing.html">Licensing</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
+        <div class="flex items-center gap-4 muted">
+          <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
+        </div>
+      </div>
     </div>
   </footer>
 
   <script>
-    // ===== Helpers =====
+    // ===================== CONFIG =====================
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // provided
+
+    // ===================== UTILITIES (from provided code) =====================
+    const csvUrl = (sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+
+    function parseCsv(text){
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){
+            if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; }
+          } else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ /* ignore */ }
+          else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+
+    function normKey(k){ return String(k||'').replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim().replace(/\s+/g,' ').toLowerCase(); }
+
+    async function fetchSheetObjects(sheet, range){
+      const res = await fetch(csvUrl(sheet, range));
+      if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
+      const txt = await res.text();
+      if (txt.trim().startsWith('<')) { console.warn('Sharing error: got HTML, not CSV.'); return []; }
+      const rows = parseCsv(txt);
+      if(!rows.length) return [];
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+      return rows.slice(1)
+        .filter(r => r.some(x => (x??'').toString().trim()!==''))
+        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+    }
+
+    // ===================== TICKER RENDERERS =====================
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.innerHTML = '';
+      const loop = [...items, ...items];
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+    }
+
+    // ===================== CALC HELPERS (existing) =====================
     const $ = sel => document.querySelector(sel);
     const fmtPct = n => (Number.isFinite(n)? (n>=0?'+':'') + (100*n).toFixed(2) + '%':'—');
     const fmtNum = (n,d=2) => Number.isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
 
-    // Year
-    $("#year").textContent = new Date().getFullYear();
+    // Year in footer
+    document.addEventListener('DOMContentLoaded', () => { const y=$("#year"); if (y) y.textContent = new Date().getFullYear(); });
 
-    // Keyboard: focus first input (Cmd/Ctrl+K)
+    // Keyboard shortcut to focus first input (Cmd/Ctrl+K)
     window.addEventListener('keydown',(e)=>{
       const isMac = navigator.platform.toUpperCase().includes('MAC');
       if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
         e.preventDefault();
-        $("#cagrStart").focus();
+        $("#cagrStart")?.focus();
       }
     });
 
     // ===== CAGR UI toggle (years vs dates) =====
-    const timeMode = $("#timeMode");
-    const yearsWrap = $("#yearsWrap");
-    const dateWrap = $("#dateWrap");
-
+    const timeMode = $("#timeMode"); const yearsWrap = $("#yearsWrap"); const dateWrap = $("#dateWrap");
     function syncTimeMode(){
       const mode = timeMode.value;
       yearsWrap.classList.toggle('hidden', mode !== 'years');
@@ -294,29 +481,22 @@
       const ms = t2 - t1;
       return ms / (365.25 * 24 * 3600 * 1000);
     }
-
     function calcCAGR(){
       const start = Number($("#cagrStart").value);
       const end   = Number($("#cagrEnd").value);
       const mode  = timeMode.value;
-      const y     = (mode === 'years')
-        ? Number($("#cagrYears").value)
-        : yearsBetween($("#dateStart").value, $("#dateEnd").value);
-
+      const y     = (mode === 'years') ? Number($("#cagrYears").value) : yearsBetween($("#dateStart").value, $("#dateEnd").value);
       const msg = $("#cagrMsg"); msg.textContent = '';
       if (!(start>0) || !(end>0)) { msg.textContent = 'Enter positive start and end values.'; msg.className='hint err'; return; }
       if (!(y>0)) { msg.textContent = 'Time must be > 0 years (use dates or decimals).'; msg.className='hint err'; return; }
-
       const cagr = Math.pow(end/start, 1/y) - 1;
       const tot  = (end/start) - 1;
-
       $("#cagrOut").textContent = fmtPct(cagr);
       $("#totalReturnOut").textContent = fmtPct(tot);
       $("#yearsOut").textContent = fmtNum(y, 4);
       msg.textContent = 'Done.'; msg.className='hint';
       pushState();
     }
-
     $("#calcCAGR").addEventListener('click', calcCAGR);
     $("#resetCAGR").addEventListener('click', ()=>{
       ["#cagrStart","#cagrEnd","#cagrYears","#dateStart","#dateEnd"].forEach(s=>$(s).value='');
@@ -325,41 +505,23 @@
     });
 
     // ===== IRR solver (bisection) =====
-    function npv(rate, flows){
-      // flows: array of numbers at t=0..N equal intervals
-      let sum = 0;
-      for (let t=0; t<flows.length; t++){
-        sum += flows[t] / Math.pow(1+rate, t);
-      }
-      return sum;
-    }
-
+    function npv(rate, flows){ let sum = 0; for (let t=0; t<flows.length; t++){ sum += flows[t] / Math.pow(1+rate, t); } return sum; }
     function solveIRR(flows){
-      // Require at least one sign change
       const hasPos = flows.some(v=>v>0), hasNeg = flows.some(v=>v<0);
       if (!hasPos || !hasNeg) return { ok:false, reason:'Cashflows must include at least one inflow and one outflow.' };
-
-      let lo = -0.9999, hi = 10; // per-period bounds
-      let fLo = npv(lo, flows), fHi = npv(hi, flows);
-      // If same sign, try to expand hi
+      let lo = -0.9999, hi = 10, fLo = npv(lo, flows), fHi = npv(hi, flows);
       if (fLo * fHi > 0){
-        for (let x=10; x<=1000 && fLo*fHi>0; x*=2){
-          hi = x; fHi = npv(hi, flows);
-        }
+        for (let x=10; x<=1000 && fLo*fHi>0; x*=2){ hi = x; fHi = npv(hi, flows); }
         if (fLo * fHi > 0) return { ok:false, reason:'Could not bracket IRR (NPV did not change sign).' };
       }
-
       for (let i=0; i<200; i++){
-        const mid = (lo + hi) / 2;
-        const fMid = npv(mid, flows);
+        const mid = (lo + hi) / 2, fMid = npv(mid, flows);
         if (Math.abs(fMid) < 1e-7) return { ok:true, rate: mid };
-        if (fLo * fMid <= 0){ hi = mid; fHi = fMid; }
-        else { lo = mid; fLo = fMid; }
+        if (fLo * fMid <= 0){ hi = mid; fHi = fMid; } else { lo = mid; fLo = fMid; }
         if (Math.abs(hi - lo) < 1e-9) return { ok:true, rate: (lo+hi)/2 };
       }
       return { ok:true, rate: (lo+hi)/2 };
     }
-
     function buildFlows(){
       const mode = $("#mode").value;
       if (mode === 'guided'){
@@ -367,57 +529,39 @@
         const c    = Number($("#contribution").value || 0);
         const n    = Number($("#periods").value || 0);
         const fv   = Number($("#finalValue").value || 0);
-        const flows = [];
-        flows.push(init);                        // t=0
-        for (let i=1;i<=n;i++) flows.push(c);   // t=1..n contributions
-        flows.push(fv);                          // t=n+1 final value
-        return flows;
+        const flows = []; flows.push(init); for (let i=1;i<=n;i++) flows.push(c); flows.push(fv); return flows;
       } else {
         const s = $("#series").value.trim();
-        const flows = s.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x));
-        return flows;
+        return s.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x));
       }
     }
-
     function calcIRR(){
       const msg = $("#irrMsg"); msg.textContent='';
       const flows = buildFlows();
       if (!flows.length){ msg.textContent='Add some cashflows first.'; msg.className='hint err'; return; }
-
       const res = solveIRR(flows);
       if (!res.ok){ msg.textContent = res.reason || 'IRR failed to converge.'; msg.className='hint err';
         ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—'); return; }
-
-      const r = res.rate;
-      const m = Number($("#freq").value || 12);
-      const rAnnual = Math.pow(1+r, m) - 1;
+      const r = res.rate, m = Number($("#freq").value || 12), rAnnual = Math.pow(1+r, m) - 1;
       $("#irrPerPeriod").textContent = fmtPct(r);
       $("#irrAnnual").textContent    = fmtPct(rAnnual);
       $("#npvAtIrr").textContent     = fmtNum(npv(r, flows), 4);
       msg.textContent = 'Done.'; msg.className='hint';
       pushState();
     }
-
     $("#calcIRR").addEventListener('click', calcIRR);
     $("#resetIRR").addEventListener('click', ()=>{
       ["#initOutflow","#contribution","#periods","#finalValue","#series"].forEach(s=>$(s).value='');
       ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—');
       $("#irrMsg").textContent=''; pushState();
     });
-
-    // Mode switch
     const modeSel = $("#mode");
-    function syncIrrMode(){
-      const v = modeSel.value;
-      $("#guidedWrap").classList.toggle('hidden', v!=='guided');
-      $("#seriesWrap").classList.toggle('hidden', v!=='series');
-    }
+    function syncIrrMode(){ const v = modeSel.value; $("#guidedWrap").classList.toggle('hidden', v!=='guided'); $("#seriesWrap").classList.toggle('hidden', v!=='series'); }
     modeSel.addEventListener('change', syncIrrMode);
 
     // ===== Permalinks (URL state) =====
     function pushState(){
       const params = new URLSearchParams();
-      // CAGR
       const tm = $("#timeMode").value;
       if ($("#cagrStart").value) params.set('cs', $("#cagrStart").value);
       if ($("#cagrEnd").value)   params.set('ce', $("#cagrEnd").value);
@@ -427,7 +571,6 @@
         if ($("#dateStart").value) params.set('ds', $("#dateStart").value);
         if ($("#dateEnd").value)   params.set('de', $("#dateEnd").value);
       }
-      // IRR
       params.set('f', $("#freq").value);
       params.set('m', $("#mode").value);
       if ($("#mode").value === 'guided'){
@@ -440,73 +583,48 @@
       }
       history.replaceState(null, '', '?' + params.toString());
     }
-
     function loadFromURL(){
       const q = new URLSearchParams(location.search);
       const get = (k, d=null)=> q.has(k)? q.get(k): d;
-
-      $("#cagrStart").value = get('cs','');
-      $("#cagrEnd").value   = get('ce','');
-      const tm = get('tm','years');
-      $("#timeMode").value = tm;
-      if (tm==='years'){ $("#cagrYears").value = get('cy',''); }
-      else { $("#dateStart").value = get('ds',''); $("#dateEnd").value = get('de',''); }
+      $("#cagrStart").value = get('cs',''); $("#cagrEnd").value   = get('ce','');
+      const tm = get('tm','years'); $("#timeMode").value = tm;
+      if (tm==='years'){ $("#cagrYears").value = get('cy',''); } else { $("#dateStart").value = get('ds',''); $("#dateEnd").value = get('de',''); }
       syncTimeMode();
-
-      $("#freq").value = get('f','12');
-      $("#mode").value = get('m','guided');
-      syncIrrMode();
-      if ($("#mode").value==='guided'){
-        $("#initOutflow").value = get('i','');
-        $("#contribution").value = get('c','');
-        $("#periods").value = get('n','');
-        $("#finalValue").value = get('fv','');
-      } else {
-        $("#series").value = get('s','');
-      }
+      $("#freq").value = get('f','12'); $("#mode").value = get('m','guided'); syncIrrMode();
+      if ($("#mode").value==='guided'){ $("#initOutflow").value = get('i',''); $("#contribution").value = get('c',''); $("#periods").value = get('n',''); $("#finalValue").value = get('fv',''); }
+      else { $("#series").value = get('s',''); }
     }
 
-    // Copy link
+    // ===== Tickers hydration (Headlines sheet) =====
+    async function hydrateTickers(){
+      try {
+        const headlines = await fetchSheetObjects('Headlines','A:B'); // Section, Text
+        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        renderTicker('topTicker', top, 'right');
+        renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){ console.warn('Headlines error', e); }
+    }
+
+    // ===== Copy link button =====
     $("#copyLink").addEventListener('click', async ()=>{
       pushState();
       try{
         await navigator.clipboard.writeText(location.href);
         $("#copyLink").textContent = 'Link Copied ✓';
         setTimeout(()=> $("#copyLink").textContent='Copy Link', 1200);
-      }catch{ /* ignore */ }
+      }catch{/* ignore */}
     });
 
-    // Examples
-    document.querySelectorAll('.ex').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const ex = btn.dataset.example;
-        if (ex==='cagr1'){
-          $("#cagrStart").value = '100000';
-          $("#cagrEnd").value   = '145000';
-          $("#timeMode").value  = 'years'; syncTimeMode();
-          $("#cagrYears").value = '3';
-          calcCAGR();
-          window.scrollTo({top:0, behavior:'smooth'});
-        } else if (ex==='irr1'){
-          $("#freq").value='12'; $("#mode").value='guided'; syncIrrMode();
-          $("#initOutflow").value='-100000';
-          $("#contribution").value='10000';
-          $("#periods").value='12';
-          $("#finalValue").value='145000';
-          calcIRR();
-        } else if (ex==='irr2'){
-          $("#freq").value='12'; $("#mode").value='series'; syncIrrMode();
-          $("#series").value='-100000, 10000, 10000, 10000, 145000';
-          calcIRR();
-        }
-        pushState();
-      });
-    });
-
-    // Init
-    loadFromURL();
-    syncTimeMode();
-    syncIrrMode();
+    // ===== Init =====
+    (function init(){
+      loadFromURL();
+      syncTimeMode();
+      syncIrrMode();
+      hydrateTickers().catch(console.error);
+      // refresh tickers every 5 min
+      setInterval(()=>hydrateTickers().catch(console.error), 5 * 60 * 1000);
+    })();
   </script>
 </body>
 </html>
