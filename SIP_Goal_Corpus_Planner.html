@@ -30,17 +30,47 @@
     .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
     .warn{color:#b45309}
     .err{color:#b91c1c}
-    /* Footer (Anthropic-inspired, white) */
-    .footer { background:#fff; color:#0f172a; }
-    .footer a { color:#334155; }
-    .footer a:hover { color: var(--brand-ink); }
-    .footer .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#64748b; }
-    .footer .muted { color:#64748b; }
-    .footer .divider { border-top:1px solid #e5e7eb; }
-    .footer .chip { font-size:.72rem; border:1px solid #e5e7eb; border-radius:999px; padding:.25rem .5rem; color:#334155; }
+
+    /* ===== TICKERS ===== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
+    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
+    /* Plain rail (NO HIGHLIGHTS: disables edge fades) */
+    .ticker-rail--plain::before,
+    .ticker-rail--plain::after { content:none; }
+
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+    .ticker-left  { animation: scroll-left 120s linear infinite; }
+    .ticker-right { animation: scroll-right 120s linear infinite; }
+    .ticker:hover { animation-play-state: paused; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* Footer (red) */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
   </style>
 </head>
 <body class="min-h-full">
+  <!-- ===== Top Ticker (with highlights) ===== -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
@@ -241,78 +271,109 @@
     </section>
   </main>
 
-  <!-- Footer (Anthropic-inspired, white) -->
-  <footer class="footer text-sm mt-8">
-    <div class="footer divider"></div>
+  <!-- ===== Bottom Ticker (NO HIGHLIGHTS) ===== -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <!-- note the extra class .ticker-rail--plain to remove fades/highlights -->
+      <div class="ticker-rail ticker-rail--plain" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium text-slate-700"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
     <div class="container py-10">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <a href="/" class="flex items-center gap-3">
           <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
           <div>
             <div class="text-lg font-bold leading-tight">bataSutra</div>
-      
+            <div class="text-xs muted -mt-0.5">Not just news — the <em>bata</em> behind the news.</div>
           </div>
         </a>
-        <div class="muted max-w-xl">
-          
-        </div>
+        <p class="muted max-w-2xl">We unpack India’s business stories and ship tools that turn insight into action.</p>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
         <div>
-          <div class="heading mb-3">Product</div>
+          <div class="heading mb-3">Editorial</div>
           <ul class="space-y-2">
-            <li><a href="/#indices">Markets</a></li>
-            <li><a href="/#heatmap">Heatmap</a></li>
-            <li><a href="/#commodities">Commodities</a></li>
-            <li><a href="/#articles">Articles</a></li>
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+            <li><a href="/policy">Policy &amp; Regulation</a></li>
+            <li><a href="/quick-stats">Quick Stats</a></li>
+            <li><a href="/archive">Archive</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="/indices.html">Indices</a></li>
+            <li><a href="/heatmap.html">Sector Heatmap</a></li>
+            <li><a href="/commodities.html">Commodities</a></li>
+            <li><a href="/dashboards/sectors">Sector Dashboards</a></li>
+            <li><a href="/calendars/earnings">Earnings Calendar</a></li>
+            <li><a href="/trackers/ipo">IPO Tracker</a></li>
+            <li><a href="/trackers/budget">Budget Tracker</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Tools</div>
           <ul class="space-y-2">
-            <li><a href="/tools">Browse Tools</a></li>
-            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools">All Tools</a></li>
             <li><a href="/tools/sip-planner" aria-current="page">SIP Goal &amp; Corpus</a></li>
             <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/tax-old-vs-new">Tax: Old vs New Slab</a></li>
+            <li><a href="/tools#changelog">Changelog</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Company</div>
           <ul class="space-y-2">
-            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
-            <li><a href="/careers">Careers</a></li>
-            <li><a href="/#subscribe">Newsletter</a></li>
-            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/inside-the-dashboard.html">Inside the Dashboard</a></li>
+            <li><a href="/advertise">Advertising &amp; Media Kit</a></li>
+            <li><a href="/partnerships.html">Partnerships</a></li>
+            <li><a href="/careers.html">Careers</a></li>
+            <li><a href="/contact.html">Contact</a></li>
+            <li><a href="/press">Press</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Resources</div>
           <ul class="space-y-2">
-            <li><a href="/tools#changelog">Changelog</a></li>
-            <li><a href="/articles">All articles</a></li>
-            <li><a href="/privacy">Privacy</a></li>
-            <li><a href="/terms">Terms</a></li>
+            <li><a href="/methodology.html">Methodology</a></li>
+            <li><a href="/data-sources.html">Data Sources</a></li>
+            <li><a href="/editorial-policy.html">Editorial Policy</a></li>
+            <li><a href="/corrections.html">Corrections</a></li>
+            <li><a href="/ethics">Ethics &amp; Independence</a></li>
+            <li><a href="/style-guide">Style Guide</a></li>
+            <li><a href="/accessibility">Accessibility</a></li>
+            <li><a href="/sitemap">Sitemap</a></li>
           </ul>
         </div>
         <div>
-          <div class="heading mb-3">Follow</div>
+          <div class="heading mb-3">Legal</div>
           <ul class="space-y-2">
-            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
-            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
-            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="/terms-of-services.html">Terms of Service</a></li>
+            <li><a href="/cookie-policy.html">Cookie Policy</a></li>
+            <li><a href="/security.html">Security</a></li>
+            <li><a href="/responsible-disclosure.html">Responsible Disclosure</a></li>
+            <li><a href="/licensing.html">Licensing</a></li>
           </ul>
         </div>
       </div>
 
-      <div class="footer divider mt-10"></div>
-      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
         <div class="flex items-center gap-4 muted">
-          <a href="/privacy">Privacy</a>
-          <span aria-hidden="true">•</span>
-          <a href="/terms">Terms</a>
-          <span aria-hidden="true">•</span>
           <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
         </div>
       </div>
@@ -320,49 +381,125 @@
   </footer>
 
   <script>
-    // Utilities
+    /* ========= SHARED UTILS ========= */
     const $ = s => document.querySelector(s);
     const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}):'—';
     const pct = (p)=> Number.isFinite(p)? (p).toFixed(2)+'%':'—';
     const toNum = (v)=> { const n = Number(v); return Number.isFinite(n)? n : NaN; };
 
-    // Footer year
-    $("#year").textContent = new Date().getFullYear();
+    /* ========= TICKERS (AUTO-LOAD ON PAGE LOAD) ========= */
+    // Replace with your published-to-web Google Sheet ID (File → Share → Publish to web)
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // must be publicly readable
+    const FALLBACK_TOP = [
+      'Sensex ▲', 'NIFTY50 ▲', 'Brent Crude ▼', 'USD/INR ↔', 'Gold (MCX) ▲', 'India VIX ▼'
+    ];
+    const FALLBACK_BOTTOM = [
+      'Mutual fund SIP inflows hit record', 'RBI policy unchanged', 'GST collection beats estimates'
+    ];
 
-    // Mode toggle
-    const modeSel = $("#mode");
-    function syncMode(){
-      const v = modeSel.value;
-      $("#goalWrap").classList.toggle('hidden', v!=='goal');
-      $("#corpusWrap").classList.toggle('hidden', v!=='corpus');
-      $("#resultLead").textContent = (v==='goal') ? 'Required SIP' : 'Given SIP';
+    function csvUrl(sheet, range) {
+      const u = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}`;
+      return u + `&nocache=${Math.random().toString(36).slice(2)}`;
     }
-    modeSel.addEventListener('change', syncMode);
 
-    // Core math
+    function parseCsv(text){
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+          else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ /* ignore */ }
+          else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+
+    async function fetchSheetObjects(sheet, range, signal){
+      const res = await fetch(csvUrl(sheet, range), {
+        cache: 'no-store',
+        headers: {'Accept':'text/csv'},
+        signal
+      });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const txt = await res.text();
+      if (!txt || txt.trim().startsWith('<')) throw new Error('Not CSV (is the sheet published to web?)');
+      const rows = parseCsv(txt);
+      if(!rows.length) return [];
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+      return rows.slice(1).filter(r=>r.some(x=>String(x||'').trim()!==''))
+        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+    }
+
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.innerHTML = '';
+      const data = (items && items.length) ? items : (id==='topTicker'?FALLBACK_TOP:FALLBACK_BOTTOM);
+      const loop = [...data, ...data]; // seamless loop
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+    }
+
+    async function hydrateTickersOnce(controller){
+      try{
+        // Expect a sheet "Headlines" with columns: Section, Text
+        const rows = await fetchSheetObjects('Headlines','A:B', controller?.signal);
+        const top = rows.filter(r=>/^top$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
+        const bottom = rows.filter(r=>/^bottom$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
+        renderTicker('topTicker', top, 'right');
+        renderTicker('bottomTicker', bottom, 'left');
+      }catch(err){
+        console.warn('Ticker load error:', err?.message||err);
+        renderTicker('topTicker', FALLBACK_TOP, 'right');
+        renderTicker('bottomTicker', FALLBACK_BOTTOM, 'left');
+      }
+    }
+
+    // Boot: render placeholders instantly, then hydrate; auto-refresh every 5 minutes
+    (function bootTickers(){
+      renderTicker('topTicker', FALLBACK_TOP, 'right');
+      renderTicker('bottomTicker', FALLBACK_BOTTOM, 'left');
+
+      const controller = new AbortController();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ()=>hydrateTickersOnce(controller));
+      } else {
+        hydrateTickersOnce(controller);
+      }
+      setInterval(()=>hydrateTickersOnce(controller), 5*60*1000);
+      window.addEventListener('pagehide', ()=>controller.abort());
+    })();
+
+    /* ========= FOOTER YEAR ========= */
+    (function setYear(){
+      const y = document.getElementById('year');
+      if (y) y.textContent = new Date().getFullYear();
+    })();
+
+    /* ========= APP (SIP PLANNER) ========= */
     function fvConstantSIP({sip, i, n, k}) {
-      // SIP each period, annuity factor, timing k: 0=end, 1=start
-      if (i === 0) return sip * n * Math.pow(1+i, k); // i=0 -> just count, timing still adds one period if start
+      if (i === 0) return sip * n * Math.pow(1+i, k);
       const A = (Math.pow(1+i, n) - 1) / i;
       return sip * A * Math.pow(1+i, k);
     }
-
     function fvStepupAnnual({sip0, i, n, k, step, m}) {
-      // step is annual percent (e.g. 10 -> 0.10), applied once every 12 contributions
-      // We simulate period-by-period (fast enough for browser)
       const stepP = (Number(step)||0)/100;
       let fv = 0;
       let sip = sip0;
       for (let t=0; t<n; t++){
-        // contribution at t: if start -> compounding (n - t), else (n - t - 1)
         const power = (k===1) ? (n - t) : (n - t - 1);
         if (power >= 0) fv += sip * Math.pow(1+i, power);
-        // after each period, possibly bump SIP if end of year-in-periods
         if ((t+1) % 12 === 0 && stepP>0) sip *= (1 + stepP);
       }
       return fv;
     }
-
     function investedStepup({sip0, n, step}) {
       const stepP = (Number(step)||0)/100;
       let total = 0, sip = sip0;
@@ -372,16 +509,13 @@
       }
       return total;
     }
-
     function solveSIPForGoal({target, lumpsumFV, i, n, k, step, m, guess}){
-      // If no step-up -> closed form
       if (!step || step===0){
         const denom = (i===0) ? (n*Math.pow(1+i,k)) : ((Math.pow(1+i,n)-1)/i * Math.pow(1+i,k));
         const need = target - lumpsumFV;
         if (need <= 0) return 0;
         return need / denom;
       }
-      // Step-up -> bisection
       const need = target - lumpsumFV;
       if (need <= 0) return 0;
       let lo = 0, hi = guess>0 ? guess*4 : Math.max(1000, need/n);
@@ -394,7 +528,6 @@
       }
       return (lo+hi)/2;
     }
-
     function buildInputs(){
       const mode = $("#mode").value;
       const m = toNum($("#freq").value) || 12;
@@ -406,110 +539,61 @@
       const infl = (toNum($("#infl").value)||0)/100;
       const step = toNum($("#stepup").value)||0;
       const lump = toNum($("#lumpsum").value)||0;
-
       const target = toNum($("#target").value);
       const sip = toNum($("#sip").value);
       const guess = toNum($("#guess").value)||0;
       const startAt = Math.max(0, Math.floor(toNum($("#startAt").value)||0));
-
       return { mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt };
     }
-
-    function validate({mode, Y, r, n, m}){
+    function validate({Y, r, n, m}){
       if (!(Y>0)) return "Duration (years) must be > 0.";
       if (!(m>0)) return "Frequency must be > 0.";
       if (!Number.isFinite(r) || r<-1) return "Return must be a valid %.";
       if (n<=0 || n> 100000) return "Total periods out of range.";
       return "";
     }
-
     function compute(){
       const inp = buildInputs();
       const err = validate(inp);
       const msg = $("#msg"); msg.textContent = '';
       if (err){ msg.textContent = err; msg.className='hint err'; return null; }
-
       const {mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt} = inp;
-
-      // Lump-sum FV
       const lumpFV = lump * Math.pow(1+i, n);
-
       let out = {
-        sipShow: NaN,
-        corpusNom: NaN,
-        corpusReal: NaN,
-        invested: NaN,
+        sipShow: NaN, corpusNom: NaN, corpusReal: NaN, invested: NaN,
         assumptions: `r=${pct(r*100)}, m=${m}/yr, n=${n}, timing=${k===1?'start':'end'}${step?`, step-up ${step}%/yr`:''}${lump?`, lump ₹${fmtINR(lump)}`:''}`
       };
-
       if (mode === 'goal'){
         if (!(target>0)){ msg.textContent='Enter a positive Target corpus.'; msg.className='hint err'; return null; }
-        // find SIP needed
-        const needSIP = solveSIPForGoal({
-          target, lumpsumFV:lumpFV, i, n, k, step, m, guess
-        });
-
-        // final corpus check (nominal)
-        let fvSip;
-        if (!step){
-          fvSip = fvConstantSIP({sip:needSIP, i, n, k});
-        } else {
-          fvSip = fvStepupAnnual({sip0:needSIP, i, n, k, step, m});
-        }
+        const needSIP = solveSIPForGoal({ target, lumpsumFV:lumpFV, i, n, k, step, m, guess });
+        const fvSip = !step ? fvConstantSIP({sip:needSIP, i, n, k}) : fvStepupAnnual({sip0:needSIP, i, n, k, step, m});
         const corpusNom = lumpFV + fvSip;
-
-        // invested total
         const investedSip = (!step) ? (needSIP * n) : investedStepup({sip0:needSIP, n, step});
         const invested = investedSip + lump;
-
-        // Real corpus if inflation
         const corpusReal = infl>0 ? corpusNom / Math.pow(1+infl, Y) : NaN;
-
-        out.sipShow = needSIP;
-        out.corpusNom = corpusNom;
-        out.corpusReal = corpusReal;
-        out.invested = invested;
-
+        out = {...out, sipShow:needSIP, corpusNom, corpusReal, invested};
       } else {
         if (!(sip>=0)){ msg.textContent='Enter a SIP amount (can be 0 if using only lump-sum).'; msg.className='hint err'; return null; }
-
-        // StartAt: delay SIP until a certain period
-        let corpusSIP = 0;
-        if (!step){
-          const nEff = Math.max(0, n - startAt);
-          if (nEff>0){
-            corpusSIP = fvConstantSIP({sip, i, n:nEff, k});
-          }
-          // shift in time by startAt (contributions after some periods) -> already handled: we treat it as fewer periods
-        } else {
-          // simulate with startAt offset
-          const nEff = Math.max(0, n - startAt);
-          corpusSIP = 0;
-          let sipNow = sip;
-          for (let t=0; t<nEff; t++){
-            const power = (k===1) ? (nEff - t) : (nEff - t - 1);
-            if (power >= 0) corpusSIP += sipNow * Math.pow(i+1, power);
-            if ((t+1)%12===0 && step>0) sipNow *= (1 + step/100);
-          }
-        }
-
+        const nEff = Math.max(0, n - startAt);
+        const corpusSIP = !step ? fvConstantSIP({sip, i, n:nEff, k})
+          : (function(){
+              let v=0, s=sip;
+              for (let t=0;t<nEff;t++){
+                const power=(k===1)?(nEff-t):(nEff-t-1);
+                if (power>=0) v+= s*Math.pow(1+i,power);
+                if ((t+1)%12===0 && step>0) s*=(1+step/100);
+              }
+              return v;
+            })();
         const corpusNom = lumpFV + corpusSIP;
-        const investedSip = (!step)
-          ? (sip * Math.max(0, n - startAt))
-          : investedStepup({sip0:sip, n:Math.max(0,n-startAt), step});
+        const investedSip = (!step) ? (sip * nEff) : investedStepup({sip0:sip, n:nEff, step});
         const invested = investedSip + lump;
-        const corpusReal = (inp.infl>0) ? corpusNom / Math.pow(1+inp.infl, Y) : NaN;
-
-        out.sipShow = sip;
-        out.corpusNom = corpusNom;
-        out.corpusReal = corpusReal;
-        out.invested = invested;
+        const corpusReal = infl>0 ? corpusNom / Math.pow(1+infl, Y) : NaN;
+        out = {...out, sipShow:sip, corpusNom, corpusReal, invested};
       }
-
       msg.textContent = 'Done.'; msg.className='hint';
       return out;
     }
-
     function draw(out){
       if (!out){
         ["#outMain","#outMainReal","#outCorpus","#outCorpusReal","#outInvested","#outAssump"].forEach(id=>$(id).textContent='—');
@@ -520,11 +604,9 @@
       $("#outMain").textContent = (mode==='goal')
         ? `₹ ${fmtINR(out.sipShow,0)} / period`
         : `₹ ${fmtINR(out.sipShow,0)} / period (given)`;
-
       $("#outMainReal").textContent = infl>0 && mode==='goal'
         ? `Real req. SIP ≈ ₹ ${fmtINR(out.sipShow/Math.pow(1+infl/100,1),0)}*`
         : '—';
-
       $("#outCorpus").textContent = Number.isFinite(out.corpusNom) ? `₹ ${fmtINR(out.corpusNom,0)}` : '—';
       $("#outCorpusReal").textContent = Number.isFinite(out.corpusReal) ? `(Real) ₹ ${fmtINR(out.corpusReal,0)}` : '—';
       $("#outInvested").textContent = Number.isFinite(out.invested) ? `₹ ${fmtINR(out.invested,0)}` : '—';
@@ -539,6 +621,16 @@
       draw(null); $("#msg").textContent=''; pushState();
     });
 
+    // Mode toggle
+    const modeSel = $("#mode");
+    function syncMode(){
+      const v = modeSel.value;
+      $("#goalWrap").classList.toggle('hidden', v!=='goal');
+      $("#corpusWrap").classList.toggle('hidden', v!=='corpus');
+      $("#resultLead").textContent = (v==='goal') ? 'Required SIP' : 'Given SIP';
+    }
+    modeSel.addEventListener('change', syncMode);
+
     // Examples
     document.querySelectorAll('.ex').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -546,12 +638,12 @@
         if (ex==='goal1'){
           $("#mode").value='goal'; syncMode();
           $("#freq").value='12'; $("#years").value='15'; $("#rate").value='12';
-          $("#timing").value='end'; $("#target").value='10000000'; // 1 Cr
+          $("#timing").value='end'; $("#target").value='10000000';
           $("#lumpsum").value='0'; $("#stepup").value='0'; $("#infl").value='5';
         } else if (ex==='goal2'){
           $("#mode").value='goal'; syncMode();
           $("#freq").value='12'; $("#years").value='20'; $("#rate").value='12';
-          $("#timing").value='start'; $("#target").value='20000000'; // 2 Cr
+          $("#timing").value='start'; $("#target").value='20000000';
           $("#stepup").value='10'; $("#lumpsum").value='0'; $("#infl").value='5';
         } else if (ex==='corpus1'){
           $("#mode").value='corpus'; syncMode();
@@ -568,7 +660,6 @@
     function pushState(){
       const p = new URLSearchParams();
       const set=(k,v)=>{ if (v!=='' && v!=null && !Number.isNaN(v)) p.set(k,v); };
-
       set('mode', $("#mode").value);
       set('m', $("#freq").value);
       set('Y', $("#years").value);
@@ -581,10 +672,8 @@
       set('guess', $("#guess").value);
       set('sip', $("#sip").value);
       set('startAt', $("#startAt").value);
-
       history.replaceState(null, '', '?' + p.toString());
     }
-
     function loadFromURL(){
       const q = new URLSearchParams(location.search);
       const get=(k,d='')=> q.has(k)? q.get(k): d;
@@ -603,6 +692,7 @@
       syncMode();
     }
 
+    // Copy link
     $("#copyLink").addEventListener('click', async ()=>{
       pushState();
       try{
@@ -612,9 +702,14 @@
       }catch{}
     });
 
-    // Init
-    loadFromURL();
-    syncMode();
+    // Init app
+    (function init(){
+      if (document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded', loadFromURL, {once:true});
+      } else {
+        loadFromURL();
+      }
+    })();
   </script>
 </body>
 </html>
