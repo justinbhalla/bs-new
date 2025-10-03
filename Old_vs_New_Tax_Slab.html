@@ -8,45 +8,97 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);}
+    :root{
+      --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);
+      --space:1.25rem; --space-sm:calc(var(--space)*.66); --space-lg:calc(var(--space)*1.5);
+      --radius:1rem; --border:#e5e7eb;
+    }
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
+
+    /* Container */
     .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
-    .card{background:var(--card); border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04);}
+    @media (min-width:768px){ .container{padding-left:1.25rem; padding-right:1.25rem;} }
+    @media (min-width:1024px){ .container{padding-left:1.5rem; padding-right:1.5rem;} }
+
+    /* Cards & atoms */
+    .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 1px 2px rgba(0,0,0,.04);}
     .lift{transition:transform .15s ease, box-shadow .15s ease}
     .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
     .kicker{letter-spacing:.08em; font-weight:700; font-size:.75rem; text-transform:uppercase; color:var(--brand-ink)}
-    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.625rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem}
-    .btn-ghost{border:1px solid #e5e7eb; color:#374151}
+    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem; line-height:1}
+    .btn-ghost{border:1px solid var(--border); color:#374151; background:#fff}
     .btn-ghost:hover{border-color:var(--brand); color:var(--brand-ink)}
     .btn-primary{background:var(--brand); color:#fff}
     .btn-primary:hover{opacity:.9}
-    .field label{font-size:.84rem; color:#334155; font-weight:600}
-    .field input, .field select{width:100%; padding:.65rem .75rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
-    .field input:focus, .field select:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
-    .muted{color:#64748b}
-    .result{font-variant-numeric:tabular-nums}
-    .hint{font-size:.8rem; color:#6b7280}
     .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
-    .ok{color:#16a34a} .bad{color:#dc2626}
-    /* Footer (Anthropic-inspired, white) */
-    .footer { background:#fff; color:#0f172a; }
-    .footer a { color:#334155; }
-    .footer a:hover { color: var(--brand-ink); }
-    .footer .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#64748b; }
-    .footer .muted { color:#64748b; }
-    .footer .divider { border-top:1px solid #e5e7eb; }
-    .footer .chip { font-size:.72rem; border:1px solid #e5e7eb; border-radius:999px; padding:.25rem .5rem; color:#334155; }
-    /* Simple table */
-    table.tax{width:100%} table.tax th, table.tax td{padding:.5rem .75rem; border-bottom:1px solid #e5e7eb; font-size:.9rem}
-    table.tax th{color:#334155; font-weight:700}
+    .muted{color:#64748b}
+    .small{font-size:.82rem}
     .mono{font-variant-numeric:tabular-nums}
-    .grid-cards{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.5rem}
-    @media (max-width:640px){ .grid-cards{grid-template-columns:1fr} }
+    .result{font-variant-numeric:tabular-nums}
+
+    /* Form fields */
+    .field{display:flex; flex-direction:column; gap:.45rem}
+    .field label{font-size:.85rem; color:#334155; font-weight:600}
+    .field input, .field select, .field textarea{
+      width:100%; padding:.72rem .85rem; border:1px solid var(--border); border-radius:.65rem; font-size:.95rem; background:#fff;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
+    .hint{font-size:.8rem; color:#6b7280}
+
+    /* Layout rhythm */
+    .stack > * + *{ margin-top: var(--space); }
+    .stack-sm > * + *{ margin-top: var(--space-sm); }
+    .stack-lg > * + *{ margin-top: var(--space-lg); }
+    .cluster{ display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
+    .section{ padding-top: var(--space); padding-bottom: var(--space); }
+    @media (min-width:1024px){ .section{ padding-top: var(--space-lg); padding-bottom: var(--space-lg); } }
+    .main-grid{ gap:1rem; } @media (min-width:640px){ .main-grid{ gap:1.25rem; } } @media (min-width:1024px){ .main-grid{ gap:1.75rem; } }
+    .subhead{display:flex; align-items:center; justify-content:space-between}
+    .rule{height:1px; background:var(--border); margin-top:.5rem}
+
+    /* Simple table */
+    table.tax{width:100%} table.tax th, table.tax td{padding:.65rem .75rem; border-bottom:1px solid var(--border); font-size:.92rem}
+    table.tax th{color:#334155; font-weight:700}
+
+    /* ===== TICKERS (shared) ===== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
+    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
+    .ticker-rail.plain::before, .ticker-rail.plain::after { display: none; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
+    .ticker-left  { animation: scroll-left 120s linear infinite; }
+    .ticker-right { animation: scroll-right 120s linear infinite; }
+    .ticker:hover { animation-play-state: paused; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* ===== Footer (red) ===== */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
   </style>
 </head>
 <body class="min-h-full">
-  <!-- Header -->
+  <!-- ===== Top Ticker ===== -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Header (updated) ===== -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -56,32 +108,23 @@
           <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
         </div>
       </a>
-      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
-        <a class="hover:text-[var(--brand-ink)]" href="/#indices">Markets</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#heatmap">Heatmap</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#commodities">Commodities</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/tools">Tools</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#articles">Articles</a>
-      </nav>
       <div class="hidden sm:flex items-center gap-2">
         <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
+  <!-- ===== Hero ===== -->
   <section class="border-b bg-white">
-    <div class="container py-8 md:py-12">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="max-w-2xl">
-          <div class="kicker mb-2">Calculator • Featured</div>
+    <div class="container section">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 lg:gap-8">
+        <div class="stack-sm" style="max-width:38rem">
+          <div class="kicker">Calculator • Featured</div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Old vs New Tax Slab</h1>
-          <p class="mt-3 text-slate-600 text-lg">Compare take-home across regimes for typical income bands.</p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <span class="pill">Tax</span><span class="pill">Compare</span>
-          </div>
+          <p class="text-slate-600 text-lg">Compare take-home across regimes for typical income bands.</p>
+          <div class="cluster"><span class="pill">Tax</span><span class="pill">Compare</span></div>
         </div>
-        <div class="flex items-center gap-3 shrink-0">
+        <div class="cluster">
           <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
           <a href="/tools" class="btn btn-ghost">Browse Tools</a>
         </div>
@@ -89,170 +132,168 @@
     </div>
   </section>
 
-  <!-- Body -->
-  <main class="container py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- ===== Main ===== -->
+  <main class="container section">
+    <div class="grid grid-cols-1 lg:grid-cols-2 main-grid">
       <!-- Inputs -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
-        <p class="muted mt-1">Salaried assumptions include a standard deduction by default. You can toggle common deductions for the Old regime.</p>
+        <div class="stack">
+          <header class="stack-sm">
+            <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
+            <p class="muted">Salaried assumptions include a standard deduction by default. You can toggle common deductions for the Old regime.</p>
+          </header>
 
-        <div class="mt-5 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="fy">Financial year (preset)</label>
-            <select id="fy">
-              <option value="fy24" selected>FY 2024–25 (assumed)</option>
-              <option value="custom">Custom slabs…</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="type">Taxpayer type</label>
-            <select id="type">
-              <option value="salaried" selected>Salaried</option>
-              <option value="other">Other individual</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="income">Annual gross income (₹)</label>
-            <input id="income" type="number" inputmode="decimal" placeholder="e.g., 1800000" min="0" step="any">
-          </div>
-
-          <div class="field">
-            <label for="hra">HRA/LTA/Other exemptions (Old only)</label>
-            <input id="hra" type="number" inputmode="decimal" placeholder="e.g., 120000" min="0" step="any">
-          </div>
-
-          <div class="field">
-            <label for="sec80c">80C (PF/ELSS/etc.) — cap ₹1.5L</label>
-            <input id="sec80c" type="number" inputmode="decimal" placeholder="e.g., 150000" min="0" step="any">
-          </div>
-
-          <div class="field">
-            <label for="sec80d">80D (Health insurance)</label>
-            <input id="sec80d" type="number" inputmode="decimal" placeholder="e.g., 25000" min="0" step="any">
-          </div>
-
-          <div class="field">
-            <label for="sec24">Home loan interest (self-occupied, Old cap ₹2L)</label>
-            <input id="sec24" type="number" inputmode="decimal" placeholder="e.g., 200000" min="0" step="any">
-          </div>
-
-          <div class="field">
-            <label for="ccd2">Employer NPS — 80CCD(2) (both regimes)</label>
-            <input id="ccd2" type="number" inputmode="decimal" placeholder="e.g., 100000" min="0" step="any">
-            <div class="hint mt-1">Note: Typically capped to 10% of salary (14% for Central Govt.). Enter the allowed amount.</div>
-          </div>
-        </div>
-
-        <div class="mt-6 grid md:grid-cols-2 gap-4">
-          <div class="field">
-            <label for="stdDed">Standard deduction (₹)</label>
-            <input id="stdDed" type="number" inputmode="decimal" placeholder="50,000" step="any">
-            <div class="hint mt-1">Default ₹50,000 for salaried in both regimes.</div>
-          </div>
-
-          <div class="field">
-            <label for="showAdv">Advanced settings</label>
-            <select id="showAdv">
-              <option value="off" selected>Hidden</option>
-              <option value="on">Show</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Advanced: surcharge + custom slabs -->
-        <div id="advBox" class="hidden mt-6 space-y-4">
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
             <div class="field">
-              <label for="cess">Health & Education Cess (%)</label>
-              <input id="cess" type="number" inputmode="decimal" value="4" step="any">
+              <label for="fy">Financial year (preset)</label>
+              <select id="fy">
+                <option value="fy24" selected>FY 2024–25 (assumed)</option>
+                <option value="custom">Custom slabs…</option>
+              </select>
             </div>
             <div class="field">
-              <label for="surchargeToggle">Surcharge</label>
-              <select id="surchargeToggle">
-                <option value="on" selected>Apply</option>
-                <option value="off">Ignore</option>
+              <label for="type">Taxpayer type</label>
+              <select id="type">
+                <option value="salaried" selected>Salaried</option>
+                <option value="other">Other individual</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="income">Annual gross income (₹)</label>
+              <input id="income" type="number" inputmode="decimal" placeholder="1800000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="hra">HRA/LTA/Other exemptions (Old only)</label>
+              <input id="hra" type="number" inputmode="decimal" placeholder="120000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="sec80c">80C (PF/ELSS/etc.) — cap ₹1.5L</label>
+              <input id="sec80c" type="number" inputmode="decimal" placeholder="150000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="sec80d">80D (Health insurance)</label>
+              <input id="sec80d" type="number" inputmode="decimal" placeholder="25000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="sec24">Home loan interest (self-occupied, Old cap ₹2L)</label>
+              <input id="sec24" type="number" inputmode="decimal" placeholder="200000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="ccd2">Employer NPS — 80CCD(2) (both regimes)</label>
+              <input id="ccd2" type="number" inputmode="decimal" placeholder="100000" min="0" step="any">
+              <div class="hint">Note: Typically capped to 10% of salary (14% for Central Govt.). Enter the allowed amount.</div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="stdDed">Standard deduction (₹)</label>
+              <input id="stdDed" type="number" inputmode="decimal" placeholder="50000" step="any">
+              <div class="hint">Default ₹50,000 for salaried in both regimes.</div>
+            </div>
+            <div class="field">
+              <label for="showAdv">Advanced settings</label>
+              <select id="showAdv">
+                <option value="off" selected>Hidden</option>
+                <option value="on">Show</option>
               </select>
             </div>
           </div>
 
-          <div class="card p-4">
-            <div class="kicker mb-2">Custom slabs (optional)</div>
-            <p class="hint">If “Financial year = Custom”, these will be used. Add comma-separated bands (₹) and rates (%). Example bands: <span class="mono">0,250000,500000,1000000</span> with rates <span class="mono">0,5,20,30</span>.</p>
-            <div class="mt-3 grid md:grid-cols-2 gap-4">
+          <!-- Advanced: surcharge + custom slabs -->
+          <div id="advBox" class="hidden stack">
+            <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
               <div class="field">
-                <label>Old regime bands (start of each slab)</label>
-                <input id="oldBands" placeholder="0,250000,500000,1000000">
+                <label for="cess">Health & Education Cess (%)</label>
+                <input id="cess" type="number" inputmode="decimal" value="4" step="any">
               </div>
               <div class="field">
-                <label>Old regime rates</label>
-                <input id="oldRates" placeholder="0,5,20,30">
+                <label for="surchargeToggle">Surcharge</label>
+                <select id="surchargeToggle">
+                  <option value="on" selected>Apply</option>
+                  <option value="off">Ignore</option>
+                </select>
               </div>
-              <div class="field">
-                <label>New regime bands</label>
-                <input id="newBands" placeholder="0,300000,600000,900000,1200000,1500000">
-              </div>
-              <div class="field">
-                <label>New regime rates</label>
-                <input id="newRates" placeholder="0,5,10,15,20,30">
+            </div>
+
+            <div class="card p-4">
+              <div class="kicker mb-2">Custom slabs (optional)</div>
+              <p class="hint">If “Financial year = Custom”, these will be used. Add comma-separated bands (₹) and rates (%). Example bands: <span class="mono">0,250000,500000,1000000</span> with rates <span class="mono">0,5,20,30</span>.</p>
+              <div class="mt-3 grid md:grid-cols-2 gap-4 lg:gap-5">
+                <div class="field">
+                  <label>Old regime bands (start of each slab)</label>
+                  <input id="oldBands" placeholder="0,250000,500000,1000000">
+                </div>
+                <div class="field">
+                  <label>Old regime rates</label>
+                  <input id="oldRates" placeholder="0,5,20,30">
+                </div>
+                <div class="field">
+                  <label>New regime bands</label>
+                  <input id="newBands" placeholder="0,300000,600000,900000,1200000,1500000">
+                </div>
+                <div class="field">
+                  <label>New regime rates</label>
+                  <input id="newRates" placeholder="0,5,10,15,20,30">
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="mt-6 flex items-center gap-3">
-          <button id="calc" class="btn btn-primary">Compare</button>
-          <button id="reset" class="btn btn-ghost">Reset</button>
-          <div id="msg" class="hint"></div>
+          <div class="subhead">
+            <div class="cluster">
+              <button id="calc" class="btn btn-primary">Compare</button>
+              <button id="reset" class="btn btn-ghost">Reset</button>
+            </div>
+            <div id="msg" class="hint"></div>
+          </div>
         </div>
       </section>
 
       <!-- Results -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">Results</h2>
-        <p class="muted mt-1">We compute tax → add surcharge (if any) → add cess → apply Section 87A rebate where applicable. Marginal relief is not modeled.</p>
+        <div class="stack">
+          <header class="stack-sm">
+            <h2 class="text-xl font-bold tracking-tight">Results</h2>
+            <p class="muted">We compute tax → add surcharge (if any) → add cess → apply Section 87A rebate where applicable. Marginal relief is not modeled.</p>
+          </header>
 
-        <div class="mt-6 grid-cards">
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Old regime tax</div>
-            <div id="oldTax" class="result text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">Effective rate: <span id="oldEff" class="mono">—</span></div>
-            <div class="ok text-sm mt-1">Take-home: <span id="oldTake" class="mono">—</span></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+            <div class="p-4 rounded-lg border">
+              <div class="muted small">Old regime tax</div>
+              <div id="oldTax" class="result text-2xl font-bold mono">—</div>
+              <div class="muted small mt-1">Effective rate: <span id="oldEff" class="mono">—</span></div>
+              <div class="text-emerald-700 small mt-1">Take-home: <span id="oldTake" class="mono">—</span></div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted small">New regime tax</div>
+              <div id="newTax" class="result text-2xl font-bold mono">—</div>
+              <div class="muted small mt-1">Effective rate: <span id="newEff" class="mono">—</span></div>
+              <div class="text-emerald-700 small mt-1">Take-home: <span id="newTake" class="mono">—</span></div>
+            </div>
           </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">New regime tax</div>
-            <div id="newTax" class="result text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">Effective rate: <span id="newEff" class="mono">—</span></div>
-            <div class="ok text-sm mt-1">Take-home: <span id="newTake" class="mono">—</span></div>
-          </div>
-        </div>
 
-        <div class="mt-6 p-4 rounded-lg bg-slate-50 border">
-          <div class="kicker mb-1">Recommendation</div>
-          <div id="rec" class="text-sm text-slate-800">—</div>
-        </div>
-
-        <div class="mt-6 grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 class="font-semibold mb-2">Old regime breakup</h3>
-            <table class="tax">
-              <tbody id="oldTable"></tbody>
-            </table>
+          <div class="p-4 rounded-lg bg-slate-50 border">
+            <div class="kicker mb-1">Recommendation</div>
+            <div id="rec" class="text-sm text-slate-800">—</div>
           </div>
-          <div>
-            <h3 class="font-semibold mb-2">New regime breakup</h3>
-            <table class="tax">
-              <tbody id="newTable"></tbody>
-            </table>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold mb-2">Old regime breakup</h3>
+              <table class="tax"><tbody id="oldTable"></tbody></table>
+            </div>
+            <div>
+              <h3 class="font-semibold mb-2">New regime breakup</h3>
+              <table class="tax"><tbody id="newTable"></tbody></table>
+            </div>
           </div>
         </div>
       </section>
     </div>
 
     <!-- Examples -->
-    <section class="mt-8 grid md:grid-cols-2 gap-6">
+    <section class="section grid md:grid-cols-2 main-grid">
       <div class="card p-5">
         <div class="kicker mb-1">Examples</div>
         <ul class="text-sm text-slate-700 list-disc pl-5">
@@ -274,78 +315,114 @@
     </section>
   </main>
 
-  <!-- Footer (Anthropic-inspired, white) -->
-  <footer class="footer text-sm mt-8">
-    <div class="footer divider"></div>
+  <!-- ===== Bottom Ticker ===== -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail plain" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer (updated, non-redundant) ===== -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
     <div class="container py-10">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <a href="/" class="flex items-center gap-3">
           <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
           <div>
             <div class="text-lg font-bold leading-tight">bataSutra</div>
-            <div class="text-xs muted -mt-0.5">Not just news — the <span class="chip">bata</span> behind the news</div>
+            <div class="text-xs muted -mt-0.5">Not just news — the <em>bata</em> behind the news.</div>
           </div>
         </a>
-        <div class="muted max-w-xl">
-          We turn India’s business headlines into context and tools you can actually use.
-        </div>
+        <p class="muted max-w-2xl">We unpack India’s business stories and ship tools that turn insight into action.</p>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
         <div>
-          <div class="heading mb-3">Product</div>
+          <div class="heading mb-3">Editorial</div>
           <ul class="space-y-2">
-            <li><a href="/#indices">Markets</a></li>
-            <li><a href="/#heatmap">Heatmap</a></li>
-            <li><a href="/#commodities">Commodities</a></li>
-            <li><a href="/#articles">Articles</a></li>
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+            <li><a href="/policy">Policy &amp; Regulation</a></li>
+            <li><a href="/quick-stats">Quick Stats</a></li>
+            <li><a href="/archive">Archive</a></li>
           </ul>
         </div>
+
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="/indices.html">Indices</a></li>
+            <li><a href="/heatmap.html">Sector Heatmap</a></li>
+            <li><a href="/commodities.html">Commodities</a></li>
+            <li><a href="/dashboards/sectors">Sector Dashboards</a></li>
+            <li><a href="/calendars/earnings">Earnings Calendar</a></li>
+            <li><a href="/trackers/ipo">IPO Tracker</a></li>
+            <li><a href="/trackers/budget">Budget Tracker</a></li>
+          </ul>
+        </div>
+
         <div>
           <div class="heading mb-3">Tools</div>
           <ul class="space-y-2">
-            <li><a href="/tools">Browse Tools</a></li>
-            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools">All Tools</a></li>
             <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
-            <li><a href="/tools/tax">Old vs New Tax</a></li>
+            <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
+            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
+            <li><a href="/tools/tax-old-vs-new">Tax: Old vs New Slab</a></li>
+            <li><a href="/tools/expense-runway">Expense Buckets &amp; Runway</a></li>
+            <li><a href="/tools#changelog">Changelog</a></li>
           </ul>
         </div>
+
         <div>
           <div class="heading mb-3">Company</div>
           <ul class="space-y-2">
-            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
-            <li><a href="/careers">Careers</a></li>
-            <li><a href="/#subscribe">Newsletter</a></li>
-            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/inside-the-dashboard.html">Inside the Dashboard</a></li>
+            <li><a href="/advertise">Advertising &amp; Media Kit</a></li>
+            <li><a href="/partnerships.html">Partnerships</a></li>
+            <li><a href="/careers.html">Careers</a></li>
+            <li><a href="/contact.html">Contact</a></li>
+            <li><a href="/press">Press</a></li>
           </ul>
         </div>
+
         <div>
           <div class="heading mb-3">Resources</div>
           <ul class="space-y-2">
-            <li><a href="/tools#changelog">Changelog</a></li>
-            <li><a href="/articles">All articles</a></li>
-            <li><a href="/privacy">Privacy</a></li>
-            <li><a href="/terms">Terms</a></li>
+            <li><a href="/methodology.html">Methodology</a></li>
+            <li><a href="/data-sources.html">Data Sources</a></li>
+            <li><a href="/editorial-policy.html">Editorial Policy</a></li>
+            <li><a href="/corrections.html">Corrections</a></li>
+            <li><a href="/ethics">Ethics &amp; Independence</a></li>
+            <li><a href="/style-guide">Style Guide</a></li>
+            <li><a href="/accessibility">Accessibility</a></li>
+            <li><a href="/sitemap">Sitemap</a></li>
           </ul>
         </div>
+
         <div>
-          <div class="heading mb-3">Follow</div>
+          <div class="heading mb-3">Legal</div>
           <ul class="space-y-2">
-            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
-            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
-            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="/terms-of-services.html">Terms of Service</li>
+            <li><a href="/cookie-policy.html">Cookie Policy</a></li>
+            <li><a href="/security.html">Security</a></li>
+            <li><a href="/responsible-disclosure.html">Responsible Disclosure</a></li>
+            <li><a href="/licensing.html">Licensing</a></li>
           </ul>
         </div>
       </div>
 
-      <div class="footer divider mt-10"></div>
-      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
         <div class="flex items-center gap-4 muted">
-          <a href="/privacy">Privacy</a>
-          <span aria-hidden="true">•</span>
-          <a href="/terms">Terms</a>
-          <span aria-hidden="true">•</span>
           <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
         </div>
       </div>
@@ -353,13 +430,73 @@
   </footer>
 
   <script>
-    // Utilities
-    const $ = s => document.querySelector(s);
+    // ===================== CONFIG =====================
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
+
+    // ===================== TICKER UTILITIES =====================
+    const csvUrl = (sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+
+    function parseCsv(text){
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+          else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ /* ignore */ }
+          else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return rows;
+    }
+
+    async function fetchSheetObjects(sheet, range){
+      const res = await fetch(csvUrl(sheet, range));
+      if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
+      const txt = await res.text();
+      if (txt.trim().startsWith('<')) { console.warn('Sharing error: got HTML, not CSV.'); return []; }
+      const rows = parseCsv(txt);
+      if(!rows.length) return [];
+      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+      return rows.slice(1)
+        .filter(r => r.some(x => (x??'').toString().trim()!==''))
+        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+    }
+
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.innerHTML = '';
+      const loop = [...items, ...items];
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+    }
+
+    async function hydrateTickers(){
+      try {
+        const headlines = await fetchSheetObjects('Headlines','A:B'); // Section, Text
+        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
+        renderTicker('topTicker', top, 'right');
+        renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){ console.warn('Headlines error', e); }
+    }
+
+    // ===================== APP UTILITIES =====================
+    const $  = s => document.querySelector(s);
     const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
     const toNum = v => { const n = Number(v); return Number.isFinite(n)? n : 0; };
 
     // Footer year
-    $("#year").textContent = new Date().getFullYear();
+    document.addEventListener('DOMContentLoaded', () => {
+      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+    });
 
     // Show advanced
     $("#showAdv").addEventListener('change', ()=> $("#advBox").classList.toggle('hidden', $("#showAdv").value!=='on'));
@@ -368,14 +505,13 @@
     const PRESETS = {
       fy24: {
         old: { bands:[0,250000,500000,1000000], rates:[0,5,20,30] },
-        // Budget 2023 slabs (with standard deduction for salaried)
         neo: { bands:[0,300000,600000,900000,1200000,1500000], rates:[0,5,10,15,20,30] },
-        rebateOld: 500000, // taxable income <= -> full rebate
-        rebateNeo: 700000, // taxable income <= -> full rebate
+        rebateOld: 500000,
+        rebateNeo: 700000,
         cess: 4,
-        surchargeBands: [0,5000000,10000000,20000000,50000000], // 0,50L,1Cr,2Cr,5Cr
+        surchargeBands: [0,5000000,10000000,20000000,50000000],
         surchargeRatesOld: [0,10,15,25,37],
-        surchargeRatesNeo: [0,10,15,25,25] // cap at 25%
+        surchargeRatesNeo: [0,10,15,25,25]
       }
     };
 
@@ -383,7 +519,7 @@
 
     function buildConfig(){
       const fy = $("#fy").value;
-      let cfg = PRESETS.fy24; // default
+      let cfg = PRESETS.fy24;
       if (fy === 'custom'){
         cfg = {
           old: { bands: parseList($("#oldBands").value), rates: parseList($("#oldRates").value) },
@@ -395,12 +531,9 @@
           surchargeRatesNeo: PRESETS.fy24.surchargeRatesNeo.slice()
         };
       } else {
-        // also let user override cess if advanced shown
         cfg = JSON.parse(JSON.stringify(PRESETS.fy24));
-        const advOn = $("#showAdv").value==='on';
-        if (advOn){ cfg.cess = toNum($("#cess").value)||cfg.cess; }
+        if ($("#showAdv").value==='on'){ cfg.cess = toNum($("#cess").value)||cfg.cess; }
       }
-      // ensure bands sorted
       const sortPair = (bands, rates) => {
         const pairs = bands.map((b,i)=>[b, rates[i] ?? rates[rates.length-1] ?? 0]).sort((a,b)=>a[0]-b[0]);
         return {bands:pairs.map(p=>p[0]), rates:pairs.map(p=>p[1])};
@@ -412,18 +545,15 @@
 
     function section87ARebate(taxable, regime, cfg){
       const lim = (regime==='old') ? cfg.rebateOld : cfg.rebateNeo;
-      // Rebate applies when taxable income <= limit
-      return (taxable>0 && taxable <= lim) ? Infinity : 0; // Infinity means wipe tax before cess
+      return (taxable>0 && taxable <= lim) ? Infinity : 0; // wipe tax before cess
     }
 
     function slabTax(taxable, bands, rates){
-      // bands: starts of slabs; rates% per slab. Last rate applies beyond last band.
-      // Example: bands [0,250k,500k,1m], rates [0,5,20,30]
       let tax = 0, rows = [];
       if (taxable <= 0) return {tax:0, rows:[]};
       for (let i=0; i<bands.length; i++){
         const start = bands[i];
-        const end = (i+1<bands.length)? bands[i+1] : taxable; // tentative
+        const end = (i+1<bands.length)? bands[i+1] : taxable;
         const rate = (rates[i] ?? rates[rates.length-1] ?? 0) / 100;
         const slabTop = Math.min(end, taxable);
         const amount = Math.max(0, slabTop - start);
@@ -437,7 +567,6 @@
     }
 
     function surchargeOn(income, baseTax, regime, cfg){
-      // Very simplified surcharge bands
       const bands = cfg.surchargeBands;
       const rates = (regime==='old') ? cfg.surchargeRatesOld : cfg.surchargeRatesNeo;
       let rate = 0;
@@ -448,39 +577,30 @@
     }
 
     function computeOne({regime, cfg, gross, stdDed, hra, d80c, d80d, sec24, ccd2, isSalaried}){
-      // Deductions allowed
       const std = isSalaried ? stdDed : 0;
-
       let taxable;
       if (regime==='old'){
         const d80cCap = Math.min(d80c, 150000);
-        const sec24Cap = Math.min(sec24, 200000); // self-occupied cap
+        const sec24Cap = Math.min(sec24, 200000);
         const totalDeductions = d80cCap + d80d + sec24Cap + ccd2 + std;
         taxable = Math.max(0, gross - hra - totalDeductions);
       } else {
-        // New regime: only standard deduction (salaried) + employer NPS 80CCD(2)
         taxable = Math.max(0, gross - std - ccd2);
       }
 
-      // 87A rebate (before cess)
       const rebate = section87ARebate(taxable, regime, cfg);
-
-      // Slab tax
       const slabs = (regime==='old') ? cfg.old : cfg.neo;
       const {tax: baseTax, rows} = slabTax(taxable, slabs.bands, slabs.rates);
 
       let taxBeforeCess = baseTax;
       if (rebate === Infinity){ taxBeforeCess = 0; }
 
-      // Surcharge (optional)
       let sur = 0;
       if ($("#surchargeToggle").value !== 'off'){
         sur = surchargeOn(taxable, taxBeforeCess, regime, cfg);
       }
 
-      // Cess
       const cess = (taxBeforeCess + sur) * (cfg.cess/100);
-
       const tax = taxBeforeCess + sur + cess;
       return { taxable, baseTax, rebateApplied: rebate===Infinity, surcharge: sur, cess, tax, rows };
     }
@@ -508,11 +628,8 @@
     function renderRows(tbody, res){
       tbody.innerHTML = '';
       const add = (k,v)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<th class="text-left">${k}</th><td class="text-right mono">${v}</td>`; tbody.appendChild(tr); };
-
       add('Taxable income', `₹${fmtINR(res.taxable)}`);
-      res.rows.forEach(r=>{
-        add(`${r.range} @ ${r.rate}`, `${r.tax}`);
-      });
+      res.rows.forEach(r=>{ add(`${r.range} @ ${r.rate}`, `${r.tax}`); });
       add('Base tax', `₹${fmtINR(res.baseTax)}`);
       add('87A rebate', res.rebateApplied? 'Applied (tax wiped before cess)':'—');
       add('Surcharge', `₹${fmtINR(res.surcharge)}`);
@@ -521,7 +638,7 @@
     }
 
     function draw(state){
-      if (!state){ 
+      if (!state){
         ["#oldTax","#newTax","#oldEff","#newEff","#oldTake","#newTake","#rec"].forEach(s=>$(s).textContent='—');
         $("#oldTable").innerHTML=''; $("#newTable").innerHTML='';
         return;
@@ -553,29 +670,19 @@
     document.querySelectorAll('.ex').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const ex = btn.dataset.example;
-        $("#fy").value='fy24';
-        $("#type").value='salaried';
-        $("#stdDed").value='50000';
-        $("#surchargeToggle").value='on';
-        $("#cess").value='4';
-        $("#showAdv").value='off'; $("#advBox").classList.add('hidden');
+        $("#fy").value='fy24'; $("#type").value='salaried';
+        $("#stdDed").value='50000'; $("#surchargeToggle").value='on';
+        $("#cess").value='4'; $("#showAdv").value='off'; $("#advBox").classList.add('hidden');
 
         if (ex==='band1'){
-          $("#income").value='750000';
-          $("#sec80c").value='150000';
-          $("#sec80d").value='25000';
+          $("#income").value='750000'; $("#sec80c").value='150000'; $("#sec80d").value='25000';
           $("#hra").value='0'; $("#sec24").value='0'; $("#ccd2").value='0';
         } else if (ex==='band2'){
-          $("#income").value='1200000';
-          $("#sec80c").value='150000';
-          $("#hra").value='100000';
+          $("#income").value='1200000'; $("#sec80c").value='150000'; $("#hra").value='100000';
           $("#sec80d").value='0'; $("#sec24").value='0'; $("#ccd2").value='0';
         } else if (ex==='band3'){
-          $("#income").value='2400000';
-          $("#sec80c").value='150000';
-          $("#sec80d").value='50000';
-          $("#sec24").value='200000';
-          $("#hra").value='0'; $("#ccd2").value='0';
+          $("#income").value='2400000'; $("#sec80c").value='150000'; $("#sec80d").value='50000';
+          $("#sec24").value='200000'; $("#hra").value='0'; $("#ccd2").value='0';
         }
         const state = compare(); draw(state); pushState();
         window.scrollTo({top:0, behavior:'smooth'});
@@ -635,8 +742,7 @@
       ["#income","#hra","#sec80c","#sec80d","#sec24","#ccd2","#oldBands","#oldRates","#newBands","#newRates","#stdDed"].forEach(s=>$(s).value='');
       $("#fy").value='fy24'; $("#type").value='salaried'; $("#stdDed").value='50000';
       $("#showAdv").value='off'; $("#advBox").classList.add('hidden'); $("#surchargeToggle").value='on'; $("#cess").value='4';
-      draw(null); $("#msg").textContent='';
-      pushState();
+      draw(null); $("#msg").textContent=''; pushState();
     });
 
     $("#copyLink").addEventListener('click', async ()=>{
@@ -648,8 +754,12 @@
       }catch{}
     });
 
-    // Init
-    loadFromURL();
+    // ===== Init =====
+    (function init(){
+      loadFromURL();
+      hydrateTickers().catch(console.error);
+      setInterval(()=>hydrateTickers().catch(console.error), 5 * 60 * 1000);
+    })();
   </script>
 </body>
 </html>
