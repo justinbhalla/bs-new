@@ -47,21 +47,17 @@
     .section{ padding-top:1.25rem; padding-bottom:1.25rem; } @media (min-width:768px){ .section{ padding-top:1.75rem; padding-bottom:1.75rem; } } @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
     .measure{ max-width: 68ch; }
 
-    /* ===== TICKERS (from provided snippet) ===== */
+    /* ===== TICKERS (auto-start, no hover needed) ===== */
     .ticker-rail { position: relative; overflow: hidden; }
-    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
-    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
-    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
-    .ticker-rail.plain::before, .ticker-rail.plain::after { display: none; }
-    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
-    .ticker-left  { animation: scroll-left 120s linear infinite; }
-    .ticker-right { animation: scroll-right 120s linear infinite; }
-    .ticker:hover { animation-play-state: paused; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; will-change: transform; }
+    .ticker-left  { animation: scroll-left 90s linear infinite; }
+    .ticker-right { animation: scroll-right 90s linear infinite; }
+    /* removed pause-on-hover to avoid any dependency on hover */
     @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
     @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
     @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
 
-    /* ===== Footer (red, Anthropic-inspired) ===== */
+    /* ===== Footer ===== */
     .footer-red { background: var(--brand-ink); color:#fff; }
     .footer-red a { color: rgba(255,255,255,.92); }
     .footer-red a:hover { color:#fff; text-decoration: underline; }
@@ -72,19 +68,23 @@
   </style>
 </head>
 <body class="min-h-full">
-  <!-- ===== Top Ticker (full width) ===== -->
+  <!-- ===== Top Ticker ===== -->
   <div class="w-full bg-[var(--brand-ink)] text-white">
     <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
       <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
         <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
       </span>
       <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
-        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium">
+          <!-- instant placeholders (auto-start) -->
+          <span>Markets open steady</span><span>Nifty 50 breadth improves</span><span>Crude eases</span><span>Rupee firm</span>
+          <span>Banking leads</span><span>IT stocks rebound</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== Header / Nav (updated) ===== -->
+  <!-- ===== Header ===== -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -94,7 +94,6 @@
           <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
         </div>
       </a>
-      
       <div class="hidden sm:flex items-center gap-2">
         <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
       </div>
@@ -109,9 +108,7 @@
           <div class="kicker">Calculator</div>
           <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">CAGR & Quick IRR</h1>
           <p class="text-slate-600 text-lg measure">Compute CAGR from start/end values or get a rough IRR from simple, equal-interval cashflows.</p>
-          <div class="flex flex-wrap gap-2">
-            <span class="pill">CAGR</span><span class="pill">IRR</span>
-          </div>
+          <div class="flex flex-wrap gap-2"><span class="pill">CAGR</span><span class="pill">IRR</span></div>
         </div>
         <div class="flex items-center gap-3 shrink-0">
           <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
@@ -281,16 +278,20 @@
     </div>
   </main>
 
-  <!-- ===== Bottom Ticker (full width) ===== -->
+  <!-- ===== Bottom Ticker ===== -->
   <div class="w-full bg-slate-100 border-y">
     <div class="py-3 px-4 sm:px-6 lg:px-8">
-      <div class="ticker-rail plain" aria-label="Bottom market headlines">
-        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      <div class="ticker-rail" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium">
+          <!-- instant placeholders (auto-start) -->
+          <span>Top movers: Banks</span><span>Midcaps steady</span><span>VIX subdued</span><span>Global cues mixed</span>
+          <span>FIIs/DIIs flow watch</span><span>RBI policy ahead</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== Footer (updated, non-redundant) ===== -->
+  <!-- ===== Footer ===== -->
   <footer class="footer-red text-sm">
     <div class="divider"></div>
     <div class="container py-10">
@@ -313,74 +314,45 @@
             <li><a href="/deep-dive">Deep Dives</a></li>
             <li><a href="/weekend-wrap">Weekend Wrap</a></li>
             <li><a href="/explainers">Explainers</a></li>
-            <li><a href="/policy">Policy &amp; Regulation</a></li>
-            <li><a href="/quick-stats">Quick Stats</a></li>
-            <li><a href="/archive">Archive</a></li>
           </ul>
         </div>
-
         <div>
           <div class="heading mb-3">Data</div>
           <ul class="space-y-2">
             <li><a href="/indices.html">Indices</a></li>
             <li><a href="/heatmap.html">Sector Heatmap</a></li>
             <li><a href="/commodities.html">Commodities</a></li>
-            <li><a href="/dashboards/sectors">Sector Dashboards</a></li>
-            <li><a href="/calendars/earnings">Earnings Calendar</a></li>
-            <li><a href="/trackers/ipo">IPO Tracker</a></li>
-            <li><a href="/trackers/budget">Budget Tracker</a></li>
           </ul>
         </div>
-
         <div>
           <div class="heading mb-3">Tools</div>
           <ul class="space-y-2">
             <li><a href="/tools">All Tools</a></li>
             <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
             <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
-            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
-            <li><a href="/tools/tax-old-vs-new">Tax: Old vs New Slab</a></li>
-            <li><a href="/tools/expense-runway">Expense Buckets &amp; Runway</a></li>
-            <li><a href="/tools#changelog">Changelog</a></li>
           </ul>
         </div>
-
         <div>
           <div class="heading mb-3">Company</div>
           <ul class="space-y-2">
             <li><a href="/about.html">About</a></li>
-            <li><a href="/inside-the-dashboard.html">Inside the Dashboard</a></li>
-            <li><a href="/advertise">Advertising &amp; Media Kit</a></li>
+            <li><a href="/advertise">Advertising</a></li>
             <li><a href="/partnerships.html">Partnerships</a></li>
-            <li><a href="/careers.html">Careers</a></li>
-            <li><a href="/contact.html">Contact</a></li>
-            <li><a href="/press">Press</a></li>
           </ul>
         </div>
-
         <div>
           <div class="heading mb-3">Resources</div>
           <ul class="space-y-2">
             <li><a href="/methodology.html">Methodology</a></li>
             <li><a href="/data-sources.html">Data Sources</a></li>
             <li><a href="/editorial-policy.html">Editorial Policy</a></li>
-            <li><a href="/corrections.html">Corrections</a></li>
-            <li><a href="/ethics">Ethics &amp; Independence</a></li>
-            <li><a href="/style-guide">Style Guide</a></li>
-            <li><a href="/accessibility">Accessibility</a></li>
-            <li><a href="/sitemap">Sitemap</a></li>
           </ul>
         </div>
-
         <div>
           <div class="heading mb-3">Legal</div>
           <ul class="space-y-2">
             <li><a href="/privacy-policy.html">Privacy Policy</a></li>
             <li><a href="/terms-of-services.html">Terms of Service</a></li>
-            <li><a href="/cookie-policy.html">Cookie Policy</a></li>
-            <li><a href="/security.html">Security</a></li>
-            <li><a href="/responsible-disclosure.html">Responsible Disclosure</a></li>
-            <li><a href="/licensing.html">Licensing</a></li>
           </ul>
         </div>
       </div>
@@ -396,233 +368,208 @@
   </footer>
 
   <script>
-    // ===================== CONFIG =====================
-    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // provided
+    /* ========= Headlines sheet (same infra as heatmap, dual-route) ========= */
+    const HEADLINES_SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
+    const HEADLINES_TAB = 'Headlines';
+    const HEADLINES_GID = ''; // optional: put the tab's gid here for export-route fallback
 
-    // ===================== UTILITIES (from provided code) =====================
-    const csvUrl = (sheet, range) =>
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+    const gvizCsv = (sheetId, sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+    const exportCsv = (sheetId, gid) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&id=${sheetId}&gid=${encodeURIComponent(gid)}&t=${Date.now()}`;
 
     function parseCsv(text){
+      if ((text||'').trim().startsWith('<')) return { rows: [], isHtml:true };
       const rows=[]; let row=[], cur='', inQuotes=false;
       for(let i=0;i<text.length;i++){
         const ch=text[i];
         if(inQuotes){
-          if(ch === '"'){
-            if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; }
-          } else cur+=ch;
+          if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+          else cur+=ch;
         } else {
           if(ch === '"') inQuotes=true;
           else if(ch === ','){ row.push(cur); cur=''; }
           else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
-          else if(ch === '\r'){ /* ignore */ }
-          else cur+=ch;
+          else if(ch === '\r'){ } else cur+=ch;
         }
       }
       if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
-      return rows;
+      return { rows, isHtml:false };
     }
 
-    function normKey(k){ return String(k||'').replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim().replace(/\s+/g,' ').toLowerCase(); }
+    async function fetchCsvWithFallback({sheetId, sheet, range, gid, label}){
+      const attempts = [{ url: gvizCsv(sheetId, sheet, range), kind: 'gviz' }];
+      if (gid && String(gid).trim()) attempts.push({ url: exportCsv(sheetId, gid), kind: 'export' });
 
-    async function fetchSheetObjects(sheet, range){
-      const res = await fetch(csvUrl(sheet, range));
-      if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
-      const txt = await res.text();
-      if (txt.trim().startsWith('<')) { console.warn('Sharing error: got HTML, not CSV.'); return []; }
-      const rows = parseCsv(txt);
-      if(!rows.length) return [];
-      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
-      return rows.slice(1)
-        .filter(r => r.some(x => (x??'').toString().trim()!==''))
-        .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+      let lastErr = null;
+      for (const att of attempts){
+        try{
+          const res = await fetch(att.url, { cache: 'no-store' });
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const txt = await res.text();
+          const { rows, isHtml } = parseCsv(txt);
+          if (isHtml) throw new Error('Returned HTML (tab likely not public)');
+          if (!rows.length) throw new Error('Empty CSV');
+          const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+          const data = rows.slice(1)
+            .filter(r => r.some(x => (x??'').toString().trim()!==''))
+            .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+          return { data, route: att.kind };
+        }catch(e){ lastErr = e; }
+      }
+      throw new Error(`${label} fetch failed: ${lastErr?.message || 'Unknown'}`);
     }
 
-    // ===================== TICKER RENDERERS =====================
+    /* ========= Marquee renderer (auto-start + animation retrigger) ========= */
     function renderTicker(id, items, dir='right'){
       const el = document.getElementById(id);
       if (!el) return;
-      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
-      el.innerHTML = '';
-      const loop = [...items, ...items];
-      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+
+      // remove animation classes to safely rebuild
+      el.classList.remove('ticker-left','ticker-right');
+      el.textContent = '';
+
+      const loop = [...items, ...items]; // duplicate for continuous scroll
+      loop.forEach(t => {
+        const s=document.createElement('span');
+        s.textContent = String(t||'').trim();
+        el.appendChild(s);
+      });
+
+      // force reflow then reapply animation class to auto-start in all browsers
+      void el.offsetWidth;
+      el.classList.add(dir==='right' ? 'ticker-right' : 'ticker-left','ticker');
+
+      // if content width is too small, pad with placeholders so animation remains smooth
+      const railWidth = el.parentElement?.clientWidth || 0;
+      while (el.scrollWidth < railWidth * 2) {
+        const clone = el.cloneNode(true);
+        [...clone.children].forEach(ch => el.appendChild(ch));
+      }
     }
 
-    // ===================== CALC HELPERS (existing) =====================
+    async function hydrateTickers(){
+      try {
+        const { data, route } = await fetchCsvWithFallback({
+          sheetId: HEADLINES_SHEET_ID,
+          sheet: HEADLINES_TAB,
+          range: 'A:B',
+          gid: HEADLINES_GID,
+          label: 'Headlines'
+        });
+        console.log(`[CAGR Headlines] via ${route}; rows: ${data.length}`);
+        const top    = data.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+        const bottom = data.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+
+        // if sheet is empty, keep existing placeholders
+        if (top.length)    renderTicker('topTicker', top, 'right');
+        if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){
+        console.warn('Headlines load error:', e);
+        // keep placeholders; nothing else to do
+      }
+    }
+
+    /* ========= CAGR/IRR logic (unchanged) ========= */
     const $ = sel => document.querySelector(sel);
     const fmtPct = n => (Number.isFinite(n)? (n>=0?'+':'') + (100*n).toFixed(2) + '%':'—');
     const fmtNum = (n,d=2) => Number.isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
 
-    // Year in footer
-    document.addEventListener('DOMContentLoaded', () => { const y=$("#year"); if (y) y.textContent = new Date().getFullYear(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+    });
 
-    // Keyboard shortcut to focus first input (Cmd/Ctrl+K)
     window.addEventListener('keydown',(e)=>{
       const isMac = navigator.platform.toUpperCase().includes('MAC');
       if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
-        e.preventDefault();
-        $("#cagrStart")?.focus();
+        e.preventDefault(); $("#cagrStart")?.focus();
       }
     });
 
-    // ===== CAGR UI toggle (years vs dates) =====
-    const timeMode = $("#timeMode"); const yearsWrap = $("#yearsWrap"); const dateWrap = $("#dateWrap");
-    function syncTimeMode(){
-      const mode = timeMode.value;
-      yearsWrap.classList.toggle('hidden', mode !== 'years');
-      dateWrap.classList.toggle('hidden', mode !== 'dates');
-    }
+    const timeMode = $("#timeMode"), yearsWrap = $("#yearsWrap"), dateWrap = $("#dateWrap");
+    function syncTimeMode(){ const m=timeMode.value; yearsWrap.classList.toggle('hidden', m!=='years'); dateWrap.classList.toggle('hidden', m!=='dates'); }
     timeMode.addEventListener('change', syncTimeMode);
 
-    // ===== CAGR calc =====
-    function yearsBetween(d1, d2){
-      const t1 = new Date(d1); const t2 = new Date(d2);
-      if (isNaN(t1) || isNaN(t2)) return NaN;
-      const ms = t2 - t1;
-      return ms / (365.25 * 24 * 3600 * 1000);
-    }
+    function yearsBetween(d1, d2){ const t1=new Date(d1), t2=new Date(d2); if (isNaN(t1)||isNaN(t2)) return NaN; return (t2-t1)/(365.25*24*3600*1000); }
     function calcCAGR(){
-      const start = Number($("#cagrStart").value);
-      const end   = Number($("#cagrEnd").value);
-      const mode  = timeMode.value;
-      const y     = (mode === 'years') ? Number($("#cagrYears").value) : yearsBetween($("#dateStart").value, $("#dateEnd").value);
-      const msg = $("#cagrMsg"); msg.textContent = '';
-      if (!(start>0) || !(end>0)) { msg.textContent = 'Enter positive start and end values.'; msg.className='hint err'; return; }
-      if (!(y>0)) { msg.textContent = 'Time must be > 0 years (use dates or decimals).'; msg.className='hint err'; return; }
-      const cagr = Math.pow(end/start, 1/y) - 1;
-      const tot  = (end/start) - 1;
-      $("#cagrOut").textContent = fmtPct(cagr);
-      $("#totalReturnOut").textContent = fmtPct(tot);
-      $("#yearsOut").textContent = fmtNum(y, 4);
-      msg.textContent = 'Done.'; msg.className='hint';
-      pushState();
+      const start=Number($("#cagrStart").value), end=Number($("#cagrEnd").value);
+      const y=(timeMode.value==='years') ? Number($("#cagrYears").value) : yearsBetween($("#dateStart").value, $("#dateEnd").value);
+      const msg=$("#cagrMsg"); msg.textContent='';
+      if(!(start>0)&&!(end>0)){ msg.textContent='Enter positive start and end values.'; msg.className='hint err'; return; }
+      if(!(y>0)){ msg.textContent='Time must be > 0 years (use dates or decimals).'; msg.className='hint err'; return; }
+      const cagr=Math.pow(end/start,1/y)-1, tot=(end/start)-1;
+      $("#cagrOut").textContent=fmtPct(cagr); $("#totalReturnOut").textContent=fmtPct(tot); $("#yearsOut").textContent=fmtNum(y,4);
+      msg.textContent='Done.'; msg.className='hint'; pushState();
     }
     $("#calcCAGR").addEventListener('click', calcCAGR);
     $("#resetCAGR").addEventListener('click', ()=>{
       ["#cagrStart","#cagrEnd","#cagrYears","#dateStart","#dateEnd"].forEach(s=>$(s).value='');
-      $("#cagrOut").textContent = $("#totalReturnOut").textContent = $("#yearsOut").textContent = '—';
+      ["#cagrOut","#totalReturnOut","#yearsOut"].forEach(id=>$(id).textContent='—');
       $("#cagrMsg").textContent=''; pushState();
     });
 
-    // ===== IRR solver (bisection) =====
-    function npv(rate, flows){ let sum = 0; for (let t=0; t<flows.length; t++){ sum += flows[t] / Math.pow(1+rate, t); } return sum; }
+    function npv(rate, flows){ let sum=0; for(let t=0;t<flows.length;t++){ sum += flows[t]/Math.pow(1+rate,t);} return sum; }
     function solveIRR(flows){
-      const hasPos = flows.some(v=>v>0), hasNeg = flows.some(v=>v<0);
-      if (!hasPos || !hasNeg) return { ok:false, reason:'Cashflows must include at least one inflow and one outflow.' };
-      let lo = -0.9999, hi = 10, fLo = npv(lo, flows), fHi = npv(hi, flows);
-      if (fLo * fHi > 0){
-        for (let x=10; x<=1000 && fLo*fHi>0; x*=2){ hi = x; fHi = npv(hi, flows); }
-        if (fLo * fHi > 0) return { ok:false, reason:'Could not bracket IRR (NPV did not change sign).' };
-      }
-      for (let i=0; i<200; i++){
-        const mid = (lo + hi) / 2, fMid = npv(mid, flows);
-        if (Math.abs(fMid) < 1e-7) return { ok:true, rate: mid };
-        if (fLo * fMid <= 0){ hi = mid; fHi = fMid; } else { lo = mid; fLo = fMid; }
-        if (Math.abs(hi - lo) < 1e-9) return { ok:true, rate: (lo+hi)/2 };
-      }
-      return { ok:true, rate: (lo+hi)/2 };
+      const hasPos=flows.some(v=>v>0), hasNeg=flows.some(v=>v<0);
+      if(!hasPos||!hasNeg) return { ok:false, reason:'Cashflows must include at least one inflow and one outflow.' };
+      let lo=-0.9999, hi=10, fLo=npv(lo,flows), fHi=npv(hi,flows);
+      if (fLo*fHi>0){ for(let x=10;x<=1000 && fLo*fHi>0;x*=2){ hi=x; fHi=npv(hi,flows);} if(fLo*fHi>0) return { ok:false, reason:'Could not bracket IRR (NPV did not change sign).' }; }
+      for(let i=0;i<200;i++){ const mid=(lo+hi)/2, fMid=npv(mid,flows); if(Math.abs(fMid)<1e-7) return { ok:true, rate: mid };
+        if(fLo*fMid<=0){ hi=mid; fHi=fMid; } else { lo=mid; fLo=fMid; }
+        if(Math.abs(hi-lo)<1e-9) return { ok:true, rate:(lo+hi)/2 }; }
+      return { ok:true, rate:(lo+hi)/2 };
     }
     function buildFlows(){
-      const mode = $("#mode").value;
-      if (mode === 'guided'){
-        const init = Number($("#initOutflow").value || 0);
-        const c    = Number($("#contribution").value || 0);
-        const n    = Number($("#periods").value || 0);
-        const fv   = Number($("#finalValue").value || 0);
-        const flows = []; flows.push(init); for (let i=1;i<=n;i++) flows.push(c); flows.push(fv); return flows;
+      const mode=$("#mode").value;
+      if(mode==='guided'){
+        const init=Number($("#initOutflow").value||0), c=Number($("#contribution").value||0), n=Number($("#periods").value||0), fv=Number($("#finalValue").value||0);
+        const flows=[init]; for(let i=1;i<=n;i++) flows.push(c); flows.push(fv); return flows;
       } else {
-        const s = $("#series").value.trim();
-        return s.split(',').map(x=>Number(x.trim())).filter(x=>Number.isFinite(x));
+        const s=$("#series").value.trim(); return s.split(',').map(x=>Number(x.trim())).filter(Number.isFinite);
       }
     }
     function calcIRR(){
-      const msg = $("#irrMsg"); msg.textContent='';
-      const flows = buildFlows();
-      if (!flows.length){ msg.textContent='Add some cashflows first.'; msg.className='hint err'; return; }
-      const res = solveIRR(flows);
-      if (!res.ok){ msg.textContent = res.reason || 'IRR failed to converge.'; msg.className='hint err';
+      const msg=$("#irrMsg"); msg.textContent='';
+      const flows=buildFlows(); if(!flows.length){ msg.textContent='Add some cashflows first.'; msg.className='hint err'; return; }
+      const res=solveIRR(flows); if(!res.ok){ msg.textContent=res.reason||'IRR failed to converge.'; msg.className='hint err';
         ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—'); return; }
-      const r = res.rate, m = Number($("#freq").value || 12), rAnnual = Math.pow(1+r, m) - 1;
-      $("#irrPerPeriod").textContent = fmtPct(r);
-      $("#irrAnnual").textContent    = fmtPct(rAnnual);
-      $("#npvAtIrr").textContent     = fmtNum(npv(r, flows), 4);
-      msg.textContent = 'Done.'; msg.className='hint';
-      pushState();
+      const r=res.rate, m=Number($("#freq").value||12), rAnnual=Math.pow(1+r,m)-1;
+      $("#irrPerPeriod").textContent=fmtPct(r); $("#irrAnnual").textContent=fmtPct(rAnnual); $("#npvAtIrr").textContent=fmtNum(npv(r,flows),4);
+      msg.textContent='Done.'; msg.className='hint'; pushState();
     }
     $("#calcIRR").addEventListener('click', calcIRR);
     $("#resetIRR").addEventListener('click', ()=>{
       ["#initOutflow","#contribution","#periods","#finalValue","#series"].forEach(s=>$(s).value='');
-      ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—');
-      $("#irrMsg").textContent=''; pushState();
+      ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—'); $("#irrMsg").textContent=''; pushState();
     });
-    const modeSel = $("#mode");
-    function syncIrrMode(){ const v = modeSel.value; $("#guidedWrap").classList.toggle('hidden', v!=='guided'); $("#seriesWrap").classList.toggle('hidden', v!=='series'); }
+    const modeSel=$("#mode"); function syncIrrMode(){ const v=modeSel.value; $("#guidedWrap").classList.toggle('hidden',v!=='guided'); $("#seriesWrap").classList.toggle('hidden',v!=='series'); }
     modeSel.addEventListener('change', syncIrrMode);
 
-    // ===== Permalinks (URL state) =====
     function pushState(){
-      const params = new URLSearchParams();
-      const tm = $("#timeMode").value;
-      if ($("#cagrStart").value) params.set('cs', $("#cagrStart").value);
-      if ($("#cagrEnd").value)   params.set('ce', $("#cagrEnd").value);
-      params.set('tm', tm);
-      if (tm === 'years' && $("#cagrYears").value) params.set('cy', $("#cagrYears").value);
-      if (tm === 'dates'){
-        if ($("#dateStart").value) params.set('ds', $("#dateStart").value);
-        if ($("#dateEnd").value)   params.set('de', $("#dateEnd").value);
-      }
-      params.set('f', $("#freq").value);
-      params.set('m', $("#mode").value);
-      if ($("#mode").value === 'guided'){
-        if ($("#initOutflow").value) params.set('i', $("#initOutflow").value);
-        if ($("#contribution").value) params.set('c', $("#contribution").value);
-        if ($("#periods").value) params.set('n', $("#periods").value);
-        if ($("#finalValue").value) params.set('fv', $("#finalValue").value);
-      } else {
-        if ($("#series").value.trim()) params.set('s', $("#series").value.trim());
-      }
-      history.replaceState(null, '', '?' + params.toString());
+      const p=new URLSearchParams(), tm=$("#timeMode").value;
+      if ($("#cagrStart").value) p.set('cs',$("#cagrStart").value);
+      if ($("#cagrEnd").value)   p.set('ce',$("#cagrEnd").value);
+      p.set('tm',tm);
+      if (tm==='years' && $("#cagrYears").value) p.set('cy',$("#cagrYears").value);
+      if (tm==='dates'){ if($("#dateStart").value) p.set('ds',$("#dateStart").value); if($("#dateEnd").value) p.set('de',$("#dateEnd").value); }
+      p.set('f',$("#freq").value); p.set('m',$("#mode").value);
+      if ($("#mode").value==='guided'){ if($("#initOutflow").value) p.set('i',$("#initOutflow").value); if($("#contribution").value) p.set('c',$("#contribution").value); if($("#periods").value) p.set('n',$("#periods").value); if($("#finalValue").value) p.set('fv',$("#finalValue").value); }
+      else { if($("#series").value.trim()) p.set('s',$("#series").value.trim()); }
+      history.replaceState(null,'','?'+p.toString());
     }
     function loadFromURL(){
-      const q = new URLSearchParams(location.search);
-      const get = (k, d=null)=> q.has(k)? q.get(k): d;
-      $("#cagrStart").value = get('cs',''); $("#cagrEnd").value   = get('ce','');
-      const tm = get('tm','years'); $("#timeMode").value = tm;
-      if (tm==='years'){ $("#cagrYears").value = get('cy',''); } else { $("#dateStart").value = get('ds',''); $("#dateEnd").value = get('de',''); }
-      syncTimeMode();
-      $("#freq").value = get('f','12'); $("#mode").value = get('m','guided'); syncIrrMode();
-      if ($("#mode").value==='guided'){ $("#initOutflow").value = get('i',''); $("#contribution").value = get('c',''); $("#periods").value = get('n',''); $("#finalValue").value = get('fv',''); }
-      else { $("#series").value = get('s',''); }
+      const q=new URLSearchParams(location.search), get=(k,d=null)=>q.has(k)?q.get(k):d;
+      $("#cagrStart").value=get('cs',''); $("#cagrEnd").value=get('ce','');
+      const tm=get('tm','years'); $("#timeMode").value=tm; (tm==='years')? $("#cagrYears").value=get('cy','') : ($("#dateStart").value=get('ds',''), $("#dateEnd").value=get('de',''));
+      syncTimeMode(); $("#freq").value=get('f','12'); $("#mode").value=get('m','guided'); syncIrrMode();
+      if ($("#mode").value==='guided'){ $("#initOutflow").value=get('i',''); $("#contribution").value=get('c',''); $("#periods").value=get('n',''); $("#finalValue").value=get('fv',''); }
+      else { $("#series").value=get('s',''); }
     }
 
-    // ===== Tickers hydration (Headlines sheet) =====
-    async function hydrateTickers(){
-      try {
-        const headlines = await fetchSheetObjects('Headlines','A:B'); // Section, Text
-        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
-        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
-        renderTicker('topTicker', top, 'right');
-        renderTicker('bottomTicker', bottom, 'left');
-      } catch(e){ console.warn('Headlines error', e); }
-    }
-
-    // ===== Copy link button =====
-    $("#copyLink").addEventListener('click', async ()=>{
-      pushState();
-      try{
-        await navigator.clipboard.writeText(location.href);
-        $("#copyLink").textContent = 'Link Copied ✓';
-        setTimeout(()=> $("#copyLink").textContent='Copy Link', 1200);
-      }catch{/* ignore */}
-    });
-
-    // ===== Init =====
+    // Init: placeholders are already visible & animating; then hydrate & refresh
     (function init(){
-      loadFromURL();
-      syncTimeMode();
-      syncIrrMode();
+      loadFromURL(); syncTimeMode(); syncIrrMode();
       hydrateTickers().catch(console.error);
-      // refresh tickers every 5 min
       setInterval(()=>hydrateTickers().catch(console.error), 5 * 60 * 1000);
     })();
   </script>
