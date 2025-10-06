@@ -61,16 +61,11 @@
     table.tax{width:100%} table.tax th, table.tax td{padding:.65rem .75rem; border-bottom:1px solid var(--border); font-size:.92rem}
     table.tax th{color:#334155; font-weight:700}
 
-    /* ===== TICKERS (shared) ===== */
+    /* ===== Auto-start TICKERS ===== */
     .ticker-rail { position: relative; overflow: hidden; }
-    .ticker-rail::after, .ticker-rail::before { content:""; position:absolute; top:0; bottom:0; width:48px; pointer-events:none; }
-    .ticker-rail::before { left:0; background: linear-gradient(to right, rgba(122,0,0,1), rgba(122,0,0,0)); }
-    .ticker-rail::after  { right:0; background: linear-gradient(to left,  rgba(122,0,0,1), rgba(122,0,0,0)); }
-    .ticker-rail.plain::before, .ticker-rail.plain::after { display: none; }
-    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; }
-    .ticker-left  { animation: scroll-left 120s linear infinite; }
-    .ticker-right { animation: scroll-right 120s linear infinite; }
-    .ticker:hover { animation-play-state: paused; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; will-change: transform; }
+    .ticker-left  { animation: scroll-left 90s linear infinite; }
+    .ticker-right { animation: scroll-right 90s linear infinite; }
     @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
     @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
     @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
@@ -86,19 +81,21 @@
   </style>
 </head>
 <body class="min-h-full">
-  <!-- ===== Top Ticker ===== -->
+  <!-- ===== Top Ticker (auto-start placeholders; hydrate later) ===== -->
   <div class="w-full bg-[var(--brand-ink)] text-white">
     <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
       <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
         <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
       </span>
       <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
-        <div id="topTicker" class="ticker ticker-right text-sm font-medium"></div>
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium">
+          <span>Markets open steady</span><span>Nifty breadth improves</span><span>Crude eases</span><span>Rupee firm</span><span>Banking leads</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== Header (updated) ===== -->
+  <!-- ===== Header ===== -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -315,16 +312,18 @@
     </section>
   </main>
 
-  <!-- ===== Bottom Ticker ===== -->
+  <!-- ===== Bottom Ticker (auto-start placeholders; hydrate later) ===== -->
   <div class="w-full bg-slate-100 border-y">
     <div class="py-3 px-4 sm:px-6 lg:px-8">
-      <div class="ticker-rail plain" aria-label="Bottom market headlines">
-        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium"></div>
+      <div class="ticker-rail" aria-label="Bottom market headlines">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium">
+          <span>Top movers: Banks</span><span>Midcaps steady</span><span>VIX subdued</span><span>Global cues mixed</span><span>RBI policy ahead</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ===== Footer (updated, non-redundant) ===== -->
+  <!-- ===== Footer ===== -->
   <footer class="footer-red text-sm">
     <div class="divider"></div>
     <div class="container py-10">
@@ -410,7 +409,7 @@
           <div class="heading mb-3">Legal</div>
           <ul class="space-y-2">
             <li><a href="/privacy-policy.html">Privacy Policy</a></li>
-            <li><a href="/terms-of-services.html">Terms of Service</li>
+            <li><a href="/terms-of-services.html">Terms of Service</a></li>
             <li><a href="/cookie-policy.html">Cookie Policy</a></li>
             <li><a href="/security.html">Security</a></li>
             <li><a href="/responsible-disclosure.html">Responsible Disclosure</a></li>
@@ -431,13 +430,14 @@
 
   <script>
     // ===================== CONFIG =====================
-    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // Headlines book
 
-    // ===================== TICKER UTILITIES =====================
-    const csvUrl = (sheet, range) =>
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+    // ===================== TICKER UTILITIES (auto-start + hydrate) =====================
+    const gvizCsv = (sheetId, sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
 
     function parseCsv(text){
+      if ((text||'').trim().startsWith('<')) return { rows: [], isHtml:true };
       const rows=[]; let row=[], cur='', inQuotes=false;
       for(let i=0;i<text.length;i++){
         const ch=text[i];
@@ -448,20 +448,19 @@
           if(ch === '"') inQuotes=true;
           else if(ch === ','){ row.push(cur); cur=''; }
           else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
-          else if(ch === '\r'){ /* ignore */ }
-          else cur+=ch;
+          else if(ch === '\r'){ } else cur+=ch;
         }
       }
       if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
-      return rows;
+      return { rows, isHtml:false };
     }
 
     async function fetchSheetObjects(sheet, range){
-      const res = await fetch(csvUrl(sheet, range));
+      const res = await fetch(gvizCsv(SHEET_ID, sheet, range), { cache: 'no-store' });
       if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
       const txt = await res.text();
-      if (txt.trim().startsWith('<')) { console.warn('Sharing error: got HTML, not CSV.'); return []; }
-      const rows = parseCsv(txt);
+      const { rows, isHtml } = parseCsv(txt);
+      if (isHtml) { console.warn('Headlines tab not public/published'); return []; }
       if(!rows.length) return [];
       const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
       return rows.slice(1)
@@ -472,19 +471,26 @@
     function renderTicker(id, items, dir='right'){
       const el = document.getElementById(id);
       if (!el) return;
-      el.className = `ticker ${dir==='right'?'ticker-right':'ticker-left'} text-sm font-medium`;
+      el.classList.remove('ticker-left','ticker-right');
       el.innerHTML = '';
       const loop = [...items, ...items];
-      loop.forEach(t => { const s=document.createElement('span'); s.textContent=t; el.appendChild(s); });
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent=String(t||'').trim(); el.appendChild(s); });
+      // Ensure enough content length for smooth loop
+      const railWidth = el.parentElement?.clientWidth || 0;
+      while (el.scrollWidth < railWidth * 2) {
+        [...el.children].forEach(ch => el.appendChild(ch.cloneNode(true)));
+      }
+      void el.offsetWidth; // retrigger animation
+      el.classList.add(dir==='right'?'ticker-right':'ticker-left','ticker');
     }
 
     async function hydrateTickers(){
       try {
         const headlines = await fetchSheetObjects('Headlines','A:B'); // Section, Text
-        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text);
-        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text);
-        renderTicker('topTicker', top, 'right');
-        renderTicker('bottomTicker', bottom, 'left');
+        const top    = headlines.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+        const bottom = headlines.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+        if (top.length)    renderTicker('topTicker', top, 'right');
+        if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
       } catch(e){ console.warn('Headlines error', e); }
     }
 
