@@ -33,31 +33,40 @@
     .field input:focus, .field select:focus, .field textarea:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
     .muted{color:#64748b}
     .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
-    .result{font-variant-numeric:tabular-nums}
+    .result{
+      font-variant-numeric:tabular-nums;
+      display:block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.25;
+    }
     .hint{font-size:.8rem; color:#6b7280}
     .err{color:#b91c1c}
+    .hint,.err{overflow-wrap:anywhere}
 
     /* Flow rhythm */
     .flow > * + *{ margin-top: var(--space); }
     .flow-sm > * + *{ margin-top: calc(var(--space) * .66); }
     .card .flow > * + *{ margin-top: 1rem; }
 
-    /* Grid gap normalization */
-    .main-grid{ gap:1rem; } @media (min-width:640px){ .main-grid{ gap:1.25rem; } } @media (min-width:1024px){ .main-grid{ gap:1.75rem; } } @media (min-width:1280px){ .main-grid{ gap:2rem; } }
-    .section{ padding-top:1.25rem; padding-bottom:1.25rem; } @media (min-width:768px){ .section{ padding-top:1.75rem; padding-bottom:1.75rem; } } @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
+    /* Grid */
+    .main-grid{ gap:1rem; }
+    @media (min-width:640px){ .main-grid{ gap:1.25rem; } }
+    @media (min-width:1024px){ .main-grid{ gap:1.75rem; } }
+    @media (min-width:1280px){ .main-grid{ gap:2rem; } }
+
+    .section{ padding-top:1.25rem; padding-bottom:1.25rem; }
+    @media (min-width:768px){ .section{ padding-top:1.75rem; padding-bottom:1.75rem; } }
+    @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
     .measure{ max-width: 68ch; }
 
-    /* ===== TICKERS (auto-start, no hover needed) ===== */
+    /* Tickers */
     .ticker-rail { position: relative; overflow: hidden; }
     .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; will-change: transform; }
     .ticker-left  { animation: scroll-left 90s linear infinite; }
     .ticker-right { animation: scroll-right 90s linear infinite; }
-    /* removed pause-on-hover to avoid any dependency on hover */
-    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
-    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @keyframes scroll-left  { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+    @keyframes scroll-right { 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
     @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
 
-    /* ===== Footer ===== */
+    /* Footer */
     .footer-red { background: var(--brand-ink); color:#fff; }
     .footer-red a { color: rgba(255,255,255,.92); }
     .footer-red a:hover { color:#fff; text-decoration: underline; }
@@ -68,7 +77,7 @@
   </style>
 </head>
 <body class="min-h-full">
-  <!-- ===== Top Ticker ===== -->
+  <!-- Top Ticker -->
   <div class="w-full bg-[var(--brand-ink)] text-white">
     <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
       <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
@@ -76,7 +85,6 @@
       </span>
       <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
         <div id="topTicker" class="ticker ticker-right text-sm font-medium">
-          <!-- instant placeholders (auto-start) -->
           <span>Markets open steady</span><span>Nifty 50 breadth improves</span><span>Crude eases</span><span>Rupee firm</span>
           <span>Banking leads</span><span>IT stocks rebound</span>
         </div>
@@ -84,7 +92,7 @@
     </div>
   </div>
 
-  <!-- ===== Header ===== -->
+  <!-- Header -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -100,7 +108,7 @@
     </div>
   </header>
 
-  <!-- ===== Hero ===== -->
+  <!-- Hero -->
   <section class="border-b bg-white">
     <div class="container section">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 lg:gap-8">
@@ -118,10 +126,11 @@
     </div>
   </section>
 
-  <!-- ===== Main ===== -->
+  <!-- Main -->
   <main class="container section">
+    <!-- Two-column grid: row1 calculators, row2 separate example cards aligned underneath -->
     <div class="grid grid-cols-1 lg:grid-cols-2 main-grid">
-      <!-- CAGR Card -->
+      <!-- CAGR Calculator -->
       <section class="card p-6 md:p-8 lift">
         <div class="flow">
           <header class="flow-sm">
@@ -175,21 +184,21 @@
           <div class="grid sm:grid-cols-3 gap-4 lg:gap-5">
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">CAGR</div>
-              <div id="cagrOut" class="result text-2xl font-bold">—</div>
+              <div id="cagrOut" class="result text-2xl font-bold" title="—">—</div>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">Total return</div>
-              <div id="totalReturnOut" class="result text-2xl font-bold">—</div>
+              <div id="totalReturnOut" class="result text-2xl font-bold" title="—">—</div>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">Years</div>
-              <div id="yearsOut" class="result text-2xl font-bold">—</div>
+              <div id="yearsOut" class="result text-2xl font-bold" title="—">—</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Quick IRR Card -->
+      <!-- Quick IRR Calculator -->
       <section class="card p-6 md:p-8 lift">
         <div class="flow">
           <header class="flow-sm">
@@ -218,7 +227,6 @@
             </div>
           </div>
 
-          <!-- Guided mode -->
           <div id="guidedWrap" class="grid md:grid-cols-2 gap-4 lg:gap-5">
             <div class="field">
               <label for="initOutflow">Initial outflow (negative)</label>
@@ -240,7 +248,6 @@
             </div>
           </div>
 
-          <!-- Series mode -->
           <div id="seriesWrap" class="hidden">
             <div class="field">
               <label for="series">Cashflow series (comma separated, equal intervals)</label>
@@ -258,15 +265,15 @@
           <div class="grid sm:grid-cols-3 gap-4 lg:gap-5">
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">IRR (per period)</div>
-              <div id="irrPerPeriod" class="result text-2xl font-bold">—</div>
+              <div id="irrPerPeriod" class="result text-2xl font-bold" title="—">—</div>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">Annualized IRR</div>
-              <div id="irrAnnual" class="result text-2xl font-bold">—</div>
+              <div id="irrAnnual" class="result text-2xl font-bold" title="—">—</div>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted text-sm">NPV @ IRR</div>
-              <div id="npvAtIrr" class="result text-2xl font-bold">—</div>
+              <div id="npvAtIrr" class="result text-2xl font-bold" title="—">—</div>
             </div>
           </div>
 
@@ -275,15 +282,34 @@
           </div>
         </div>
       </section>
+
+      <!-- CAGR Examples (separate card under CAGR) -->
+      <section class="card p-6 lift">
+        <div class="kicker mb-2">CAGR — Examples</div>
+        <ul class="text-sm text-slate-700 space-y-2">
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-cagr="e1">₹1,00,000 → ₹1,45,000 in 3 years (Years mode)</button></li>
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-cagr="e2">₹5,00,000 → ₹8,00,000 from 01 Apr 2020 to 01 Oct 2025 (Dates mode)</button></li>
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-cagr="e3">₹2,00,000 → ₹1,80,000 in 2 years (Negative CAGR)</button></li>
+        </ul>
+      </section>
+
+      <!-- IRR Examples (separate card under IRR) -->
+      <section class="card p-6 lift">
+        <div class="kicker mb-2">Quick IRR — Examples</div>
+        <ul class="text-sm text-slate-700 space-y-2">
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-irr="g1">Guided SIP: -₹1,00,000 + ₹5,000 × 12 → ₹1,45,000 (Monthly)</button></li>
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-irr="g2">Lumpsum only: -₹5,00,000 → ₹6,50,000 (no contributions)</button></li>
+          <li><button class="btn btn-ghost justify-start w-full text-left" data-ex-irr="s1">Series: -100000, 10000, 10000, 10000, 145000</button></li>
+        </ul>
+      </section>
     </div>
   </main>
 
-  <!-- ===== Bottom Ticker ===== -->
+  <!-- Bottom Ticker -->
   <div class="w-full bg-slate-100 border-y">
     <div class="py-3 px-4 sm:px-6 lg:px-8">
       <div class="ticker-rail" aria-label="Bottom market headlines">
         <div id="bottomTicker" class="ticker ticker-left text-sm font-medium">
-          <!-- instant placeholders (auto-start) -->
           <span>Top movers: Banks</span><span>Midcaps steady</span><span>VIX subdued</span><span>Global cues mixed</span>
           <span>FIIs/DIIs flow watch</span><span>RBI policy ahead</span>
         </div>
@@ -291,7 +317,7 @@
     </div>
   </div>
 
-  <!-- ===== Footer ===== -->
+  <!-- Footer -->
   <footer class="footer-red text-sm">
     <div class="divider"></div>
     <div class="container py-10">
@@ -368,10 +394,10 @@
   </footer>
 
   <script>
-    /* ========= Headlines sheet (same infra as heatmap, dual-route) ========= */
+    // ===== Headlines sheet (same infra as heatmap, dual-route) =====
     const HEADLINES_SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
     const HEADLINES_TAB = 'Headlines';
-    const HEADLINES_GID = ''; // optional: put the tab's gid here for export-route fallback
+    const HEADLINES_GID = '';
 
     const gvizCsv = (sheetId, sheet, range) =>
       `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
@@ -420,27 +446,17 @@
       throw new Error(`${label} fetch failed: ${lastErr?.message || 'Unknown'}`);
     }
 
-    /* ========= Marquee renderer (auto-start + animation retrigger) ========= */
+    // ===== Marquee renderer =====
     function renderTicker(id, items, dir='right'){
       const el = document.getElementById(id);
       if (!el) return;
-
-      // remove animation classes to safely rebuild
       el.classList.remove('ticker-left','ticker-right');
       el.textContent = '';
-
-      const loop = [...items, ...items]; // duplicate for continuous scroll
-      loop.forEach(t => {
-        const s=document.createElement('span');
-        s.textContent = String(t||'').trim();
-        el.appendChild(s);
-      });
-
-      // force reflow then reapply animation class to auto-start in all browsers
+      const loop = [...items, ...items];
+      loop.forEach(t => { const s=document.createElement('span'); s.textContent = String(t||'').trim(); el.appendChild(s); });
       void el.offsetWidth;
       el.classList.add(dir==='right' ? 'ticker-right' : 'ticker-left','ticker');
 
-      // if content width is too small, pad with placeholders so animation remains smooth
       const railWidth = el.parentElement?.clientWidth || 0;
       while (el.scrollWidth < railWidth * 2) {
         const clone = el.cloneNode(true);
@@ -451,45 +467,41 @@
     async function hydrateTickers(){
       try {
         const { data, route } = await fetchCsvWithFallback({
-          sheetId: HEADLINES_SHEET_ID,
-          sheet: HEADLINES_TAB,
-          range: 'A:B',
-          gid: HEADLINES_GID,
-          label: 'Headlines'
+          sheetId: HEADLINES_SHEET_ID, sheet: HEADLINES_TAB, range: 'A:B', gid: HEADLINES_GID, label: 'Headlines'
         });
-        console.log(`[CAGR Headlines] via ${route}; rows: ${data.length}`);
         const top    = data.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
         const bottom = data.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
-
-        // if sheet is empty, keep existing placeholders
         if (top.length)    renderTicker('topTicker', top, 'right');
         if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
-      } catch(e){
-        console.warn('Headlines load error:', e);
-        // keep placeholders; nothing else to do
-      }
+      } catch(e){ console.warn('Headlines load error:', e); }
     }
 
-    /* ========= CAGR/IRR logic (unchanged) ========= */
+    // ===== Helpers & formatting =====
     const $ = sel => document.querySelector(sel);
+    const setOut = (id, text) => { const el = document.getElementById(id); if (!el) return; const v = String(text ?? '—'); el.textContent = v; el.title = v; };
     const fmtPct = n => (Number.isFinite(n)? (n>=0?'+':'') + (100*n).toFixed(2) + '%':'—');
     const fmtNum = (n,d=2) => Number.isFinite(n) ? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
-    });
+    document.addEventListener('DOMContentLoaded', () => { const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear(); });
 
-    window.addEventListener('keydown',(e)=>{
-      const isMac = navigator.platform.toUpperCase().includes('MAC');
-      if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
-        e.preventDefault(); $("#cagrStart")?.focus();
-      }
-    });
+    // Copy link
+    (function(){
+      const btn = document.getElementById('copyLink');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        try{
+          await navigator.clipboard.writeText(location.href);
+          const old = btn.textContent; btn.textContent = 'Copied!'; setTimeout(()=>btn.textContent=old,1200);
+        }catch{}
+      });
+    })();
 
+    // Time mode toggles
     const timeMode = $("#timeMode"), yearsWrap = $("#yearsWrap"), dateWrap = $("#dateWrap");
     function syncTimeMode(){ const m=timeMode.value; yearsWrap.classList.toggle('hidden', m!=='years'); dateWrap.classList.toggle('hidden', m!=='dates'); }
     timeMode.addEventListener('change', syncTimeMode);
 
+    // CAGR
     function yearsBetween(d1, d2){ const t1=new Date(d1), t2=new Date(d2); if (isNaN(t1)||isNaN(t2)) return NaN; return (t2-t1)/(365.25*24*3600*1000); }
     function calcCAGR(){
       const start=Number($("#cagrStart").value), end=Number($("#cagrEnd").value);
@@ -498,16 +510,19 @@
       if(!(start>0)&&!(end>0)){ msg.textContent='Enter positive start and end values.'; msg.className='hint err'; return; }
       if(!(y>0)){ msg.textContent='Time must be > 0 years (use dates or decimals).'; msg.className='hint err'; return; }
       const cagr=Math.pow(end/start,1/y)-1, tot=(end/start)-1;
-      $("#cagrOut").textContent=fmtPct(cagr); $("#totalReturnOut").textContent=fmtPct(tot); $("#yearsOut").textContent=fmtNum(y,4);
+      setOut('cagrOut', fmtPct(cagr));
+      setOut('totalReturnOut', fmtPct(tot));
+      setOut('yearsOut', fmtNum(y,4));
       msg.textContent='Done.'; msg.className='hint'; pushState();
     }
     $("#calcCAGR").addEventListener('click', calcCAGR);
     $("#resetCAGR").addEventListener('click', ()=>{
       ["#cagrStart","#cagrEnd","#cagrYears","#dateStart","#dateEnd"].forEach(s=>$(s).value='');
-      ["#cagrOut","#totalReturnOut","#yearsOut"].forEach(id=>$(id).textContent='—');
+      setOut('cagrOut','—'); setOut('totalReturnOut','—'); setOut('yearsOut','—');
       $("#cagrMsg").textContent=''; pushState();
     });
 
+    // IRR
     function npv(rate, flows){ let sum=0; for(let t=0;t<flows.length;t++){ sum += flows[t]/Math.pow(1+rate,t);} return sum; }
     function solveIRR(flows){
       const hasPos=flows.some(v=>v>0), hasNeg=flows.some(v=>v<0);
@@ -532,19 +547,22 @@
       const msg=$("#irrMsg"); msg.textContent='';
       const flows=buildFlows(); if(!flows.length){ msg.textContent='Add some cashflows first.'; msg.className='hint err'; return; }
       const res=solveIRR(flows); if(!res.ok){ msg.textContent=res.reason||'IRR failed to converge.'; msg.className='hint err';
-        ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—'); return; }
+        setOut('irrPerPeriod','—'); setOut('irrAnnual','—'); setOut('npvAtIrr','—'); return; }
       const r=res.rate, m=Number($("#freq").value||12), rAnnual=Math.pow(1+r,m)-1;
-      $("#irrPerPeriod").textContent=fmtPct(r); $("#irrAnnual").textContent=fmtPct(rAnnual); $("#npvAtIrr").textContent=fmtNum(npv(r,flows),4);
+      setOut('irrPerPeriod', fmtPct(r));
+      setOut('irrAnnual', fmtPct(rAnnual));
+      setOut('npvAtIrr', fmtNum(npv(r,flows),4));
       msg.textContent='Done.'; msg.className='hint'; pushState();
     }
     $("#calcIRR").addEventListener('click', calcIRR);
     $("#resetIRR").addEventListener('click', ()=>{
       ["#initOutflow","#contribution","#periods","#finalValue","#series"].forEach(s=>$(s).value='');
-      ["#irrPerPeriod","#irrAnnual","#npvAtIrr"].forEach(id=>$(id).textContent='—'); $("#irrMsg").textContent=''; pushState();
+      setOut('irrPerPeriod','—'); setOut('irrAnnual','—'); setOut('npvAtIrr','—'); $("#irrMsg").textContent=''; pushState();
     });
     const modeSel=$("#mode"); function syncIrrMode(){ const v=modeSel.value; $("#guidedWrap").classList.toggle('hidden',v!=='guided'); $("#seriesWrap").classList.toggle('hidden',v!=='series'); }
     modeSel.addEventListener('change', syncIrrMode);
 
+    // URL state
     function pushState(){
       const p=new URLSearchParams(), tm=$("#timeMode").value;
       if ($("#cagrStart").value) p.set('cs',$("#cagrStart").value);
@@ -566,12 +584,45 @@
       else { $("#series").value=get('s',''); }
     }
 
-    // Init: placeholders are already visible & animating; then hydrate & refresh
+    // Examples
+    function applyCagrExample(key){
+      if (key==='e1'){ $("#timeMode").value='years'; syncTimeMode();
+        $("#cagrStart").value='100000'; $("#cagrEnd").value='145000'; $("#cagrYears").value='3'; }
+      if (key==='e2'){ $("#timeMode").value='dates'; syncTimeMode();
+        $("#cagrStart").value='500000'; $("#cagrEnd").value='800000';
+        $("#dateStart").value='2020-04-01'; $("#dateEnd").value='2025-10-01'; }
+      if (key==='e3'){ $("#timeMode").value='years'; syncTimeMode();
+        $("#cagrStart").value='200000'; $("#cagrEnd").value='180000'; $("#cagrYears").value='2'; }
+      calcCAGR();
+    }
+    function applyIrrExample(key){
+      if (key==='g1'){ $("#mode").value='guided'; syncIrrMode(); $("#freq").value='12';
+        $("#initOutflow").value='-100000'; $("#contribution").value='5000'; $("#periods").value='12'; $("#finalValue").value='145000'; }
+      if (key==='g2'){ $("#mode").value='guided'; syncIrrMode(); $("#freq").value='12';
+        $("#initOutflow").value='-500000'; $("#contribution").value='0'; $("#periods").value='0'; $("#finalValue").value='650000'; }
+      if (key==='s1'){ $("#mode").value='series'; syncIrrMode(); $("#freq").value='12';
+        $("#series").value='-100000, 10000, 10000, 10000, 145000'; }
+      calcIRR();
+    }
+    document.addEventListener('click', (e)=>{
+      const cagrBtn = e.target.closest('[data-ex-cagr]'); if (cagrBtn){ applyCagrExample(cagrBtn.getAttribute('data-ex-cagr')); return; }
+      const irrBtn  = e.target.closest('[data-ex-irr]');  if (irrBtn){  applyIrrExample(irrBtn.getAttribute('data-ex-irr'));  return; }
+    });
+
+    // Init
     (function init(){
       loadFromURL(); syncTimeMode(); syncIrrMode();
       hydrateTickers().catch(console.error);
       setInterval(()=>hydrateTickers().catch(console.error), 5 * 60 * 1000);
     })();
+
+    // Keyboard focus helper
+    window.addEventListener('keydown',(e)=>{
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
+        e.preventDefault(); $("#cagrStart")?.focus();
+      }
+    });
   </script>
 </body>
 </html>
