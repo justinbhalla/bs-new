@@ -3,20 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>bataSutra — SIP Goal & Corpus Planner</title>
-  <meta name="description" content="Reverse-SIP to reach a target corpus or estimate corpus from your monthly SIP. Fully client-side." />
+  <title>bataSutra — SIP Goal & Corpus</title>
+  <meta name="description" content="Compute required SIP for a goal or estimate corpus from a given SIP. Clean, client-side, shareable." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root{
       --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);
-      --space:1.25rem; --space-sm:calc(var(--space)*.66); --space-lg:calc(var(--space)*1.5);
-      --radius:1rem; --border:#e5e7eb;
+      --space:1.25rem; --border:#e5e7eb; --radius:1rem;
     }
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
 
-    /* Container (parity) */
+    /* Container */
     .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
     @media (min-width:768px){ .container{padding-left:1.25rem; padding-right:1.25rem;} }
     @media (min-width:1024px){ .container{padding-left:1.5rem; padding-right:1.5rem;} }
@@ -26,16 +25,15 @@
     .lift{transition:transform .15s ease, box-shadow .15s ease}
     .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
     .kicker{letter-spacing:.08em; font-weight:700; font-size:.75rem; text-transform:uppercase; color:var(--brand-ink)}
-    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem; line-height:1}
+    .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
+    .muted{color:#64748b}
+    .small{font-size:.82rem}
+    .mono{font-variant-numeric:tabular-nums}
+    .btn{display:inline-flex; align-items:center; gap:.5rem; padding:.65rem .9rem; border-radius:.65rem; font-weight:600; font-size:.92rem}
     .btn-ghost{border:1px solid var(--border); color:#374151; background:#fff}
     .btn-ghost:hover{border-color:var(--brand); color:var(--brand-ink)}
     .btn-primary{background:var(--brand); color:#fff}
     .btn-primary:hover{opacity:.9}
-    .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
-    .muted{color:#64748b}
-    .hint{font-size:.8rem; color:#6b7280}
-    .mono{font-variant-numeric:tabular-nums}
-    .small{font-size:.82rem}
 
     /* Fields */
     .field{display:flex; flex-direction:column; gap:.45rem}
@@ -44,25 +42,27 @@
       width:100%; padding:.72rem .85rem; border:1px solid var(--border); border-radius:.65rem; font-size:.95rem; background:#fff;
     }
     .field input:focus, .field select:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
+    .hint{font-size:.8rem; color:#6b7280}
 
-    /* Layout rhythm (exact parity) */
-    .stack > * + *{ margin-top: var(--space); }
-    .stack-sm > * + *{ margin-top: var(--space-sm); }
-    .stack-lg > * + *{ margin-top: var(--space-lg); }
-    .section{ padding-top: var(--space); padding-bottom: var(--space); }
-    @media (min-width:1024px){ .section{ padding-top: var(--space-lg); padding-bottom: var(--space-lg); } }
+    /* Rhythm */
+    .flow > * + *{ margin-top: var(--space); }
+    .flow-sm > * + *{ margin-top: calc(var(--space) * .66); }
+    .section{ padding-top:1.25rem; padding-bottom:1.25rem; } @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
     .main-grid{ gap:1rem; } @media (min-width:640px){ .main-grid{ gap:1.25rem; } } @media (min-width:1024px){ .main-grid{ gap:1.75rem; } }
 
-    /* Tickers — auto-start (no hover), hydrate later */
-    .ticker-rail{position:relative; overflow:hidden;}
-    .ticker{display:flex; width:max-content; white-space:nowrap; gap:2.25rem; will-change:transform;}
-    .ticker-left{ animation:scroll-left 90s linear infinite; }
-    .ticker-right{ animation:scroll-right 90s linear infinite; }
-    @keyframes scroll-left{ 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-    @keyframes scroll-right{ 0%{transform:translateX(-50%)} 100%{transform:translateX(0)} }
-    @media (prefers-reduced-motion: reduce){ .ticker-left,.ticker-right{ animation:none; } }
+    /* Results: prevent overflow */
+    .result{display:block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.25}
 
-    /* Footer (red) */
+    /* ===== Auto-start TICKERS ===== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.25rem; will-change: transform; }
+    .ticker-left  { animation: scroll-left 90s linear infinite; }
+    .ticker-right { animation: scroll-right 90s linear infinite; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* Footer */
     .footer-red { background: var(--brand-ink); color:#fff; }
     .footer-red a { color: rgba(255,255,255,.92); }
     .footer-red a:hover { color:#fff; text-decoration: underline; }
@@ -71,15 +71,15 @@
   </style>
 </head>
 <body class="min-h-full">
-  <!-- ===== Top Ticker (auto placeholders; hydrate later) ===== -->
+  <!-- ===== Top Ticker ===== -->
   <div class="w-full bg-[var(--brand-ink)] text-white">
     <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
       <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
         <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
       </span>
-      <div class="ticker-rail flex-1" aria-label="Top market headlines" aria-live="polite">
+      <div class="ticker-rail flex-1" aria-label="Top headlines" aria-live="polite">
         <div id="topTicker" class="ticker ticker-right text-sm font-medium">
-          <span>Sensex steady</span><span>NIFTY50 breadth improves</span><span>Crude eases</span><span>Rupee firm</span><span>MF SIP inflows strong</span>
+          <span>MF SIP inflows strong</span><span>Sensex steady</span><span>Crude eases</span><span>Rupee firm</span>
         </div>
       </div>
     </div>
@@ -96,61 +96,59 @@
         </div>
       </a>
       <div class="hidden sm:flex items-center gap-2">
+        <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
+        <a href="/tools" class="btn btn-ghost">Browse Tools</a>
         <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
       </div>
     </div>
   </header>
 
-  <!-- ===== Hero (uses .section rhythm) ===== -->
+  <!-- ===== Hero ===== -->
   <section class="border-b bg-white">
     <div class="container section">
       <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 lg:gap-8">
-        <div class="stack-sm" style="max-width:38rem">
+        <div class="flow-sm" style="max-width:38rem">
           <div class="kicker">Planner</div>
-          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">SIP Goal & Corpus Planner</h1>
-          <p class="text-slate-600 text-lg">Reverse-SIP to reach a target corpus or estimate corpus from your periodic SIP.</p>
-          <div class="flex flex-wrap gap-2"><span class="pill">SIP</span><span class="pill">Corpus</span><span class="pill">Goal</span></div>
-        </div>
-        <div class="flex items-center gap-3 shrink-0">
-          <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
-          <a href="/tools" class="btn btn-ghost">Browse Tools</a>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">SIP Goal & Corpus</h1>
+          <p class="text-slate-600 text-lg">Compute required SIP for a target or estimate your corpus from a given SIP. Fully client-side.</p>
+          <div class="flex flex-wrap gap-2"><span class="pill">SIP</span><span class="pill">Goal</span><span class="pill">Corpus</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ===== Main (container + section + main-grid) ===== -->
+  <!-- ===== Main ===== -->
   <main class="container section">
     <div class="grid grid-cols-1 lg:grid-cols-2 main-grid">
       <!-- Inputs -->
       <section class="card p-6 md:p-8 lift">
-        <div class="stack">
-          <header class="stack-sm">
+        <div class="flow">
+          <header class="flow-sm">
             <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
-            <p class="muted">Pick a mode, set return assumptions, timing, and optional step-ups. Runs locally in your browser.</p>
+            <p class="muted">Pick mode, returns, timing. Optional inflation and annual step-up.</p>
           </header>
 
           <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
             <div class="field">
               <label for="mode">Mode</label>
               <select id="mode">
-                <option value="goal" selected>Goal: compute required SIP</option>
+                <option value="goal" selected>Goal: find required SIP</option>
                 <option value="corpus">Corpus: compute final amount</option>
               </select>
             </div>
             <div class="field">
-              <label for="freq">Contribution frequency</label>
+              <label for="freq">Frequency</label>
               <select id="freq">
-                <option value="12" selected>Monthly (12/yr)</option>
-                <option value="4">Quarterly (4/yr)</option>
-                <option value="1">Annual (1/yr)</option>
-                <option value="52">Weekly (52/yr)</option>
-                <option value="365">Daily (365/yr)</option>
+                <option value="12" selected>Monthly</option>
+                <option value="4">Quarterly</option>
+                <option value="1">Annual</option>
+                <option value="52">Weekly</option>
+                <option value="365">Daily</option>
               </select>
             </div>
             <div class="field">
               <label for="years">Duration (years)</label>
-              <input id="years" type="number" inputmode="decimal" placeholder="10" min="0.1" step="any">
+              <input id="years" type="number" inputmode="decimal" placeholder="15" min="0.1" step="any">
             </div>
             <div class="field">
               <label for="rate">Expected return p.a. (%)</label>
@@ -159,8 +157,8 @@
             <div class="field">
               <label for="timing">Contribution timing</label>
               <select id="timing">
-                <option value="end" selected>End of period (ordinary)</option>
-                <option value="start">Start of period (annuity due)</option>
+                <option value="end" selected>End of period</option>
+                <option value="start">Start of period</option>
               </select>
             </div>
             <div class="field">
@@ -171,17 +169,17 @@
 
           <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
             <div class="field">
-              <label for="stepup">Step-up SIP annually (%) <span class="muted">(optional)</span></label>
-              <input id="stepup" type="number" inputmode="decimal" placeholder="10" step="any">
+              <label for="stepup">Step-up annually (%) <span class="muted">(optional)</span></label>
+              <input id="stepup" type="number" inputmode="decimal" placeholder="0" step="any">
               <div class="hint">Applied once every 12 contributions.</div>
             </div>
             <div class="field">
               <label for="lumpsum">Current corpus / lump-sum now</label>
-              <input id="lumpsum" type="number" inputmode="decimal" placeholder="250000" min="0" step="any">
+              <input id="lumpsum" type="number" inputmode="decimal" placeholder="0" min="0" step="any">
             </div>
           </div>
 
-          <!-- Mode-specific -->
+          <!-- Mode: Goal -->
           <div id="goalWrap" class="grid md:grid-cols-2 gap-4 lg:gap-5">
             <div class="field">
               <label for="target">Target corpus</label>
@@ -193,6 +191,7 @@
             </div>
           </div>
 
+          <!-- Mode: Corpus -->
           <div id="corpusWrap" class="grid md:grid-cols-2 gap-4 lg:gap-5 hidden">
             <div class="field">
               <label for="sip">SIP per contribution</label>
@@ -214,56 +213,68 @@
 
       <!-- Results -->
       <section class="card p-6 md:p-8 lift">
-        <div class="stack">
-          <header class="stack-sm">
+        <div class="flow">
+          <header class="flow-sm">
             <h2 class="text-xl font-bold tracking-tight">Results</h2>
-            <p class="muted">Nominal values shown by default. If inflation is set, we also show real (inflation-adjusted) estimates.</p>
+            <p class="muted">Nominal by default; set inflation to also see real.</p>
           </header>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
             <div class="p-4 rounded-lg border">
               <div class="muted small" id="resultLead">Required SIP</div>
-              <div id="outMain" class="text-2xl font-bold mono">—</div>
+              <span id="outMain" class="result text-2xl font-bold mono" title="—">—</span>
               <div id="outMainReal" class="small muted mono mt-1">—</div>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted small">Final corpus</div>
-              <div id="outCorpus" class="text-2xl font-bold mono">—</div>
+              <span id="outCorpus" class="result text-2xl font-bold mono" title="—">—</span>
               <div id="outCorpusReal" class="small muted mono mt-1">—</div>
             </div>
             <div class="p-4 rounded-lg border">
-              <div class="muted small">Total invested (SIP + lump)</div>
-              <div id="outInvested" class="text-2xl font-bold mono">—</div>
+              <div class="muted small">Total invested</div>
+              <span id="outInvested" class="result text-2xl font-bold mono" title="—">—</span>
             </div>
             <div class="p-4 rounded-lg border">
               <div class="muted small">Assumptions</div>
               <div id="outAssump" class="small mono">—</div>
             </div>
           </div>
-
-          <div class="p-4 rounded-lg bg-slate-50 border small text-slate-700">
-            <div class="kicker mb-1">Method</div>
-            Constant SIP uses annuity math with per-period rate \(i=r/m\), periods \(n=mY\).
-            FV = lump\(\cdot(1+i)^n\) + SIP\(\cdot\frac{(1+i)^n-1}{i}\cdot(1+i)^k\); \(k=1\) for start, \(0\) for end.
-            Step-up SIP applies an annual increase \(g\) once every 12 contributions; Goal mode solves via bisection.
-          </div>
-        </div>
       </section>
     </div>
+
+    <!-- ===== Examples (separate sections) ===== -->
+    <section class="section grid md:grid-cols-2 main-grid">
+      <div class="card p-6 lift">
+        <div class="kicker mb-2">Goal mode examples</div>
+        <ul class="text-sm text-slate-700 space-y-2">
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="g1">₹1 Cr in 15y • 12% p.a. • Monthly • End • No step-up • 5% infl</button></li>
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="g2">₹2 Cr in 20y • 12% p.a. • Monthly • Start • 10% step-up • 5% infl</button></li>
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="g3">₹50 L in 10y • 11% p.a. • Monthly • End • No step-up</button></li>
+        </ul>
+      </div>
+      <div class="card p-6 lift">
+        <div class="kicker mb-2">Corpus mode examples</div>
+        <ul class="text-sm text-slate-700 space-y-2">
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="c1">SIP ₹25k/mo for 12y • 11% p.a. • End • Lump ₹2L</button></li>
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="c2">SIP ₹15k/mo for 20y • 12% p.a. • Start • 10% step-up</button></li>
+          <li><button class="btn btn-ghost w-full justify-start ex" data-example="c3">SIP ₹10k/mo for 25y • 12% p.a. • End • No step-up</button></li>
+        </ul>
+      </div>
+    </section>
   </main>
 
-  <!-- ===== Bottom Ticker (auto placeholders; hydrate later) ===== -->
-  <section class="w-full bg-slate-100 border-y">
-    <div class="container section py-3">
-      <div class="ticker-rail" aria-label="Bottom market headlines">
-        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium text-slate-700">
-          <span>Start-of-period compounds longer</span><span>Set inflation to see real corpus</span><span>Annual step-up optional</span><span>Copy link to share</span>
+  <!-- ===== Bottom Ticker ===== -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail" aria-label="Bottom tips">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium">
+          <span>Start-of-period compounds longer</span><span>Set inflation to see real corpus</span><span>Optional annual step-up</span><span>Copy link preserves inputs</span>
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ===== Footer (parity) ===== -->
+  <!-- ===== Footer ===== -->
   <footer class="footer-red text-sm">
     <div class="divider"></div>
     <div class="container section">
@@ -272,10 +283,10 @@
           <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
           <div>
             <div class="text-lg font-bold leading-tight">bataSutra</div>
-            <div class="text-xs muted -mt-0.5">Tools that turn insight into action.</div>
+            <div class="text-xs">Tools that turn insight into action.</div>
           </div>
         </a>
-        <p class="muted max-w-2xl">Plan constant or step-up SIPs against realistic return and inflation assumptions.</p>
+        <p class="max-w-2xl text-white/80">Plan constant or step-up SIPs with realistic return and inflation assumptions.</p>
       </div>
 
       <div class="divider mt-10"></div>
@@ -289,14 +300,8 @@
   </footer>
 
   <script>
-    /* ========= SHARED UTILS ========= */
-    const $ = s => document.querySelector(s);
-    const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}):'—';
-    const pct = (x)=> Number.isFinite(x)? x.toFixed(2)+'%':'—';
-    const toNum = v => { const n = Number(v); return Number.isFinite(n)? n : NaN; };
-
-    /* ========= AUTO-START + HYDRATED TICKERS ========= */
-    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // Headlines sheet (public)
+    /* ========= TICKERS (auto-start + hydrate) ========= */
+    const SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg'; // Headlines
     const gvizCsv = (sheetId, sheet, range) =>
       `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
 
@@ -312,105 +317,92 @@
           if(ch === '"') inQuotes=true;
           else if(ch === ','){ row.push(cur); cur=''; }
           else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
-          else if(ch === '\r'){ } else cur+=ch;
+          else if(ch !== '\r'){ cur+=ch; }
         }
       }
       if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
       return { rows, isHtml:false };
     }
-
     async function fetchSheetObjects(sheet, range){
-      const res = await fetch(gvizCsv(SHEET_ID, sheet, range), { cache:'no-store' });
-      if(!res.ok) throw new Error('Sheet fetch failed: ' + sheet);
-      const txt = await res.text();
-      const { rows, isHtml } = parseCsv(txt);
-      if (isHtml) { console.warn('Headlines not public'); return []; }
-      if(!rows.length) return [];
-      const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
-      return rows.slice(1)
-        .filter(r => r.some(x => (x??'').toString().trim()!==''))
-        .map(r => Object.fromEntries(headers.map((h,i)=>[h,(r[i]??'').toString().trim()])));
+      try{
+        const res = await fetch(gvizCsv(SHEET_ID, sheet, range), { cache:'no-store' });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const txt = await res.text();
+        const { rows, isHtml } = parseCsv(txt);
+        if (isHtml || !rows.length) return [];
+        const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+        return rows.slice(1)
+          .filter(r => r.some(x => (x??'').toString().trim()!==''))
+          .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+      }catch{ return []; }
     }
-
     function renderTicker(id, items, dir='right'){
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.classList.remove('ticker-left','ticker-right');
-      el.innerHTML = '';
-      const data = (items && items.length) ? items : Array.from(el.querySelectorAll('span')).map(s=>s.textContent);
-      const loop = [...data, ...data];
-      loop.forEach(t => { const s=document.createElement('span'); s.textContent=String(t||'').trim(); el.appendChild(s); });
+      const el = document.getElementById(id); if(!el) return;
+      el.classList.remove('ticker-left','ticker-right'); el.textContent = '';
+      const loop = [...items, ...items];
+      loop.forEach(t=>{ const s=document.createElement('span'); s.textContent=String(t||'').trim(); el.appendChild(s); });
+      // pad if too short
       const railWidth = el.parentElement?.clientWidth || 0;
       while (el.scrollWidth < railWidth * 2) {
         [...el.children].forEach(ch => el.appendChild(ch.cloneNode(true)));
       }
-      void el.offsetWidth; // retrigger animation
-      el.classList.add(dir==='right'?'ticker-right':'ticker-left','ticker');
+      void el.offsetWidth; el.classList.add(dir==='right'?'ticker-right':'ticker-left','ticker');
     }
-
     async function hydrateTickers(){
-      try{
-        const rows = await fetchSheetObjects('Headlines','A:B'); // Section, Text
-        const top    = rows.filter(r=>/^top$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
-        const bottom = rows.filter(r=>/^bottom$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
-        if (top.length)    renderTicker('topTicker', top, 'right');
-        if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
-      }catch(e){ console.warn('Ticker hydrate error', e); }
+      const rows = await fetchSheetObjects('Headlines','A:B'); // Section, Text
+      const top    = rows.filter(r=>/^top$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
+      const bottom = rows.filter(r=>/^bottom$/i.test(r.Section||'')).map(r=>r.Text).filter(Boolean);
+      if (top.length)    renderTicker('topTicker', top, 'right');
+      if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
     }
 
-    // Boot: placeholders already present; hydrate + refresh
-    (function bootTickers(){
-      hydrateTickers().catch(console.error);
-      setInterval(()=>hydrateTickers().catch(console.error), 5*60*1000);
-    })();
+    /* ========= UTILS ========= */
+    const $ = s => document.querySelector(s);
+    const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
+    const toNum  = v => { const n = Number(v); return Number.isFinite(n)? n : NaN; };
+    const pct = x => Number.isFinite(x)? x.toFixed(2)+'%':'—';
 
-    /* ========= FOOTER YEAR ========= */
-    document.addEventListener('DOMContentLoaded', () => {
-      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
-    });
+    function setText(id, val){
+      const el = document.getElementById(id); if(!el) return;
+      const txt = String(val ?? '—'); el.textContent = txt; el.title = txt;
+    }
 
     /* ========= SIP CORE ========= */
-    function fvConstantSIP({sip, i, n, k}) {
+    function fvConstantSIP({sip, i, n, k}){ // k: 1=start, 0=end
       if (i === 0) return sip * n * Math.pow(1+i, k);
-      const A = (Math.pow(1+i, n) - 1) / i;
-      return sip * A * Math.pow(1+i, k);
+      return sip * ((Math.pow(1+i,n) - 1) / i) * Math.pow(1+i, k);
     }
-    function fvStepupAnnual({sip0, i, n, k, step}) {
-      const g = (Number(step)||0)/100;
-      let fv = 0, sip = sip0;
+    function fvStepupAnnual({sip0, i, n, k, step}){
+      const g = (Number(step)||0)/100; let fv=0, s=sip0;
       for (let t=0; t<n; t++){
         const power = (k===1) ? (n - t) : (n - t - 1);
-        if (power >= 0) fv += sip * Math.pow(1+i, power);
-        if ((t+1) % 12 === 0 && g>0) sip *= (1 + g);
+        if (power >= 0) fv += s * Math.pow(1+i, power);
+        if ((t+1)%12===0 && g>0) s *= (1+g);
       }
       return fv;
     }
-    function investedStepup({sip0, n, step}) {
-      const g = (Number(step)||0)/100;
-      let total = 0, s = sip0;
-      for (let t=0; t<n; t++){
-        total += s;
-        if ((t+1)%12===0 && g>0) s *= (1+g);
-      }
-      return total;
+    function investedStepup({sip0, n, step}){
+      const g=(Number(step)||0)/100; let tot=0, s=sip0;
+      for (let t=0; t<n; t++){ tot += s; if((t+1)%12===0 && g>0) s *= (1+g); }
+      return tot;
     }
     function solveSIPForGoal({target, lumpsumFV, i, n, k, step, guess}){
-      const need = target - lumpsumFV;
-      if (need <= 0) return 0;
+      const need = target - lumpsumFV; if (need <= 0) return 0;
       if (!step || step===0){
         const denom = (i===0) ? (n*Math.pow(1+i,k)) : ((Math.pow(1+i,n)-1)/i * Math.pow(1+i,k));
         return need / denom;
       }
-      let lo = 0, hi = guess>0 ? guess*4 : Math.max(1000, need/n);
-      for (let iter=0; iter<80; iter++){
-        const mid = (lo+hi)/2;
-        const fvS = fvStepupAnnual({sip0:mid, i, n, k, step});
-        if (fvS >= need) hi = mid; else lo = mid;
+      let lo=0, hi = guess>0 ? guess*4 : Math.max(1000, need/n);
+      for (let it=0; it<80; it++){
+        const mid=(lo+hi)/2;
+        const fv = fvStepupAnnual({sip0:mid, i, n, k, step});
+        if (fv >= need) hi=mid; else lo=mid;
         if (Math.abs(hi-lo) < 1e-6) break;
       }
       return (lo+hi)/2;
     }
 
+    /* ========= APP STATE ========= */
     function buildInputs(){
       const mode = $("#mode").value;
       const m = toNum($("#freq").value) || 12;
@@ -428,11 +420,10 @@
       const startAt = Math.max(0, Math.floor(toNum($("#startAt").value)||0));
       return { mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt };
     }
-
     function validate({Y, m, r, n}){
-      if (!(Y>0)) return "Duration (years) must be > 0.";
+      if (!(Y>0)) return "Duration must be > 0.";
       if (!(m>0)) return "Frequency must be > 0.";
-      if (!Number.isFinite(r) || r<-1) return "Return must be a valid %.";
+      if (!Number.isFinite(r) || r<-1) return "Enter a valid return %.";
       if (n<=0 || n>100000) return "Total periods out of range.";
       return "";
     }
@@ -445,13 +436,14 @@
 
       const {mode, m, Y, r, i, n, k, infl, step, lump, target, sip, guess, startAt} = inp;
       const lumpsumFV = lump * Math.pow(1+i, n);
+
       let out = {
         sipShow: NaN, corpusNom: NaN, corpusReal: NaN, invested: NaN,
-        assumptions: `r=${pct(r*100)}, m=${m}/yr, n=${n}, timing=${k===1?'start':'end'}${step?`, step-up ${step}%/yr`:''}${lump?`, lump ₹${fmtINR(lump)}`:''}`
+        assumptions: `r=${(r*100).toFixed(2)}% • m=${m}/yr • n=${n} • timing=${k===1?'start':'end'}${step?` • step-up ${step}%/yr`:''}${lump?` • lump ₹${fmtINR(lump)}`:''}`
       };
 
       if (mode==='goal'){
-        if (!(target>0)){ msg.textContent='Enter a positive Target corpus.'; msg.className='hint text-red-700'; return null; }
+        if (!(target>0)){ msg.textContent='Enter a positive target corpus.'; msg.className='hint text-red-700'; return null; }
         const req = solveSIPForGoal({target, lumpsumFV, i, n, k, step, guess});
         const fvSip = (!step) ? fvConstantSIP({sip:req, i, n, k}) : fvStepupAnnual({sip0:req, i, n, k, step});
         const corpusNom = lumpsumFV + fvSip;
@@ -465,9 +457,9 @@
           ? fvConstantSIP({sip, i, n:nEff, k})
           : (function(){
               let v=0, s=sip;
-              for (let t=0;t<nEff;t++){
+              for (let t=0; t<nEff; t++){
                 const power=(k===1)?(nEff-t):(nEff-t-1);
-                if (power>=0) v+= s*Math.pow(1+i,power);
+                if (power>=0) v += s*Math.pow(1+i,power);
                 if ((t+1)%12===0 && step>0) s*=(1+step/100);
               }
               return v;
@@ -484,27 +476,35 @@
 
     function draw(out){
       if (!out){
-        ["#outMain","#outMainReal","#outCorpus","#outCorpusReal","#outInvested","#outAssump"].forEach(id=>$(id).textContent='—');
+        ["outMain","outMainReal","outCorpus","outCorpusReal","outInvested","outAssump"].forEach(id=>setText(id,'—'));
         return;
       }
-      const infl = toNum($("#infl").value)||0;
+      const infl = (toNum($("#infl").value)||0);
       const mode = $("#mode").value;
 
-      $("#outMain").textContent = (mode==='goal')
+      setText("outMain", (mode==='goal')
         ? `₹ ${fmtINR(out.sipShow,0)} / period`
-        : `₹ ${fmtINR(out.sipShow,0)} / period (given)`;
+        : `₹ ${fmtINR(out.sipShow,0)} / period (given)`);
 
-      $("#outMainReal").textContent = (infl>0 && mode==='goal')
+      setText("outMainReal", (infl>0 && mode==='goal')
         ? `Real req. SIP ≈ ₹ ${fmtINR(out.sipShow/Math.pow(1+infl/100,1),0)}*`
-        : '—';
+        : '—');
 
-      $("#outCorpus").textContent = Number.isFinite(out.corpusNom) ? `₹ ${fmtINR(out.corpusNom,0)}` : '—';
-      $("#outCorpusReal").textContent = Number.isFinite(out.corpusReal) ? `(Real) ₹ ${fmtINR(out.corpusReal,0)}` : '—';
-      $("#outInvested").textContent = Number.isFinite(out.invested) ? `₹ ${fmtINR(out.invested,0)}` : '—';
-      $("#outAssump").textContent = out.assumptions;
+      setText("outCorpus", Number.isFinite(out.corpusNom) ? `₹ ${fmtINR(out.corpusNom,0)}` : '—');
+      setText("outCorpusReal", Number.isFinite(out.corpusReal) ? `(Real) ₹ ${fmtINR(out.corpusReal,0)}` : '—');
+      setText("outInvested", Number.isFinite(out.invested) ? `₹ ${fmtINR(out.invested,0)}` : '—');
+      setText("outAssump", out.assumptions);
     }
 
-    // Actions
+    /* ========= UI BEHAVIOR ========= */
+    function syncMode(){
+      const v=$("#mode").value;
+      $("#goalWrap").classList.toggle('hidden', v!=='goal');
+      $("#corpusWrap").classList.toggle('hidden', v!=='corpus');
+      $("#resultLead").textContent = (v==='goal') ? 'Required SIP' : 'Given SIP';
+    }
+    $("#mode").addEventListener('change', syncMode);
+
     $("#calc").addEventListener('click', ()=>{ const out = compute(); draw(out); pushState(); });
     $("#reset").addEventListener('click', ()=>{
       ["#years","#rate","#infl","#stepup","#lumpsum","#target","#guess","#sip","#startAt"].forEach(s=>$(s).value='');
@@ -512,38 +512,52 @@
       draw(null); $("#msg").textContent=''; pushState();
     });
 
-    // Mode toggle
-    function syncMode(){
-      const v = $("#mode").value;
-      $("#goalWrap").classList.toggle('hidden', v!=='goal');
-      $("#corpusWrap").classList.toggle('hidden', v!=='corpus');
-      $("#resultLead").textContent = (v==='goal') ? 'Required SIP' : 'Given SIP';
-    }
-    $("#mode").addEventListener('change', syncMode);
+    // Examples (separate sections)
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.ex'); if (!btn) return;
+      const ex = btn.dataset.example;
 
-    // Examples
-    document.querySelectorAll('.ex').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        const ex = btn.dataset.example;
-        if (ex==='goal1'){
-          $("#mode").value='goal'; syncMode();
-          $("#freq").value='12'; $("#years").value='15'; $("#rate").value='12';
-          $("#timing").value='end'; $("#target").value='10000000';
-          $("#lumpsum").value='0'; $("#stepup").value='0'; $("#infl").value='5';
-        } else if (ex==='goal2'){
-          $("#mode").value='goal'; syncMode();
-          $("#freq").value='12'; $("#years").value='20'; $("#rate").value='12';
-          $("#timing").value='start'; $("#target").value='20000000';
-          $("#stepup").value='10'; $("#lumpsum").value='0'; $("#infl").value='5';
-        } else if (ex==='corpus1'){
-          $("#mode").value='corpus'; syncMode();
-          $("#freq").value='12'; $("#years").value='12'; $("#rate").value='11';
-          $("#timing").value='end'; $("#sip").value='25000'; $("#lumpsum").value='200000';
-          $("#startAt").value='0'; $("#stepup").value='0'; $("#infl").value='0';
-        }
-        const out = compute(); draw(out); pushState();
-        window.scrollTo({top:0, behavior:'smooth'});
-      });
+      if (ex==='g1'){
+        $("#mode").value='goal'; syncMode();
+        $("#freq").value='12'; $("#years").value='15'; $("#rate").value='12';
+        $("#timing").value='end'; $("#target").value='10000000';
+        $("#lumpsum").value='0'; $("#stepup").value='0'; $("#infl").value='5';
+      }
+      if (ex==='g2'){
+        $("#mode").value='goal'; syncMode();
+        $("#freq").value='12'; $("#years").value='20'; $("#rate").value='12';
+        $("#timing").value='start'; $("#target").value='20000000';
+        $("#stepup").value='10'; $("#lumpsum").value='0'; $("#infl").value='5';
+      }
+      if (ex==='g3'){
+        $("#mode").value='goal'; syncMode();
+        $("#freq").value='12'; $("#years").value='10'; $("#rate").value='11';
+        $("#timing").value='end'; $("#target").value='5000000';
+        $("#stepup").value='0'; $("#lumpsum").value='0'; $("#infl").value='0';
+      }
+      if (ex==='c1'){
+        $("#mode").value='corpus'; syncMode();
+        $("#freq").value='12'; $("#years").value='12'; $("#rate").value='11';
+        $("#timing").value='end'; $("#sip").value='25000';
+        $("#lumpsum").value='200000'; $("#startAt").value='0';
+        $("#stepup").value='0'; $("#infl").value='0';
+      }
+      if (ex==='c2'){
+        $("#mode").value='corpus'; syncMode();
+        $("#freq").value='12'; $("#years").value='20'; $("#rate").value='12';
+        $("#timing").value='start'; $("#sip").value='15000';
+        $("#lumpsum").value='0'; $("#startAt").value='0';
+        $("#stepup").value='10'; $("#infl").value='0';
+      }
+      if (ex==='c3'){
+        $("#mode").value='corpus'; syncMode();
+        $("#freq").value='12'; $("#years").value='25'; $("#rate").value='12';
+        $("#timing").value='end'; $("#sip").value='10000';
+        $("#lumpsum").value='0'; $("#startAt").value='0';
+        $("#stepup").value='0'; $("#infl").value='0';
+      }
+      const out = compute(); draw(out); pushState();
+      window.scrollTo({top:0, behavior:'smooth'});
     });
 
     // Permalinks
@@ -565,8 +579,7 @@
       history.replaceState(null, '', '?' + p.toString());
     }
     function loadFromURL(){
-      const q = new URLSearchParams(location.search);
-      const get=(k,d='')=> q.has(k)? q.get(k): d;
+      const q = new URLSearchParams(location.search), get=(k,d='')=> q.has(k)? q.get(k): d;
       $("#mode").value=get('mode','goal');
       $("#freq").value=get('m','12');
       $("#years").value=get('Y','');
@@ -583,22 +596,33 @@
     }
 
     // Copy link
-    $("#copyLink").addEventListener('click', async ()=>{
-      pushState();
-      try{
-        await navigator.clipboard.writeText(location.href);
-        const btn = $("#copyLink"); const old = btn.textContent;
-        btn.textContent = 'Link Copied ✓';
-        setTimeout(()=> btn.textContent=old, 1200);
-      }catch{}
-    });
+    const copyBtn = document.getElementById('copyLink');
+    if (copyBtn){
+      copyBtn.addEventListener('click', async ()=>{
+        pushState();
+        try{
+          await navigator.clipboard.writeText(location.href);
+          const old = copyBtn.textContent; copyBtn.textContent = 'Copied!';
+          setTimeout(()=>copyBtn.textContent=old, 1200);
+        }catch{}
+      });
+    }
 
-    // Init
+    // Footer year + init
     (function init(){
-      if (document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', loadFromURL, {once:true});
-      } else { loadFromURL(); }
+      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+      loadFromURL();
+      hydrateTickers().catch(()=>{});
+      setInterval(()=>hydrateTickers().catch(()=>{}), 5*60*1000);
     })();
+
+    // Quick focus: Ctrl/Cmd+K
+    window.addEventListener('keydown',(e)=>{
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
+        e.preventDefault(); document.getElementById('years')?.focus();
+      }
+    });
   </script>
 </body>
 </html>
