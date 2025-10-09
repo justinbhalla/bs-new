@@ -3,15 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>bataSutra — Expense Buckets & Runway</title>
-  <meta name="description" content="Categorize expenses, set buffers, and project months of runway. Fully client-side." />
+  <title>bataSutra — Expense Runway</title>
+  <meta name="description" content="A minimal calculator to estimate runway months from monthly income, expenses, assets, and simple shocks. Fully client-side." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root{ --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);}
+    :root{
+      --brand:#8B0000; --brand-ink:#7a0000; --ink:#111; --muted:#6b7280; --bg:#fff; --card:#fff; --ring:rgba(139,0,0,.25);
+      --space:1.25rem;
+    }
     html,body{height:100%}
     body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji"; background:var(--bg); color:var(--ink)}
     .container{max-width:80rem; margin:0 auto; padding-left:1rem; padding-right:1rem;}
+    @media (min-width:768px){ .container{padding-left:1.25rem; padding-right:1.25rem;} }
+    @media (min-width:1024px){ .container{padding-left:1.5rem; padding-right:1.5rem;} }
+
+    /* Cards & tokens */
     .card{background:var(--card); border:1px solid #e5e7eb; border-radius:1rem; box-shadow:0 1px 2px rgba(0,0,0,.04);}
     .lift{transition:transform .15s ease, box-shadow .15s ease}
     .lift:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(0,0,0,.08)}
@@ -25,26 +32,55 @@
     .field input, .field select{width:100%; padding:.65rem .75rem; border:1px solid #e5e7eb; border-radius:.65rem; font-size:.95rem}
     .field input:focus, .field select:focus{outline:none; box-shadow:0 0 0 .25rem var(--ring); border-color:var(--brand)}
     .muted{color:#64748b}
-    .mono{font-variant-numeric:tabular-nums}
     .pill{font-weight:600; font-size:.72rem; padding:.25rem .5rem; border-radius:.5rem; background:#f1f5f9; color:#0f172a}
-    table.t {width:100%} table.t th, table.t td {padding:.5rem .75rem; border-bottom:1px solid #e5e7eb; font-size:.9rem}
-    table.t th {color:#334155; font-weight:700}
-    .ok{color:#16a34a} .warn{color:#b45309} .bad{color:#dc2626}
-    /* Footer (Anthropic-inspired, white) */
-    .footer { background:#fff; color:#0f172a; }
-    .footer a { color:#334155; }
-    .footer a:hover { color: var(--brand-ink); }
-    .footer .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#64748b; }
-    .footer .muted { color:#64748b; }
-    .footer .divider { border-top:1px solid #e5e7eb; }
-    .footer .chip { font-size:.72rem; border:1px solid #e5e7eb; border-radius:999px; padding:.25rem .5rem; color:#334155; }
-    .grid-cards{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem}
-    @media (max-width:640px){ .grid-cards{grid-template-columns:1fr} }
+    .result{font-variant-numeric:tabular-nums; display:block; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.25;}
     .small{font-size:.8rem}
+
+    /* Flow rhythm */
+    .flow > * + *{ margin-top: var(--space); }
+    .flow-sm > * + *{ margin-top: calc(var(--space) * .66); }
+    .card .flow > * + *{ margin-top: 1rem; }
+
+    /* Grid */
+    .main-grid{ gap:1rem; } @media (min-width:640px){ .main-grid{ gap:1.25rem; } } @media (min-width:1024px){ .main-grid{ gap:1.75rem; } } @media (min-width:1280px){ .main-grid{ gap:2rem; } }
+    .section{ padding-top:1.25rem; padding-bottom:1.25rem; } @media (min-width:768px){ .section{ padding-top:1.75rem; padding-bottom:1.75rem; } } @media (min-width:1024px){ .section{ padding-top:2rem; padding-bottom:2rem; } }
+    .measure{ max-width: 68ch; }
+
+    /* ===== TICKERS (from CAGR) ===== */
+    .ticker-rail { position: relative; overflow: hidden; }
+    .ticker { display:flex; width:max-content; white-space:nowrap; gap:2.5rem; will-change: transform; }
+    .ticker-left  { animation: scroll-left 90s linear infinite; }
+    .ticker-right { animation: scroll-right 90s linear infinite; }
+    @keyframes scroll-left  { 0% { transform:translateX(0) } 100% { transform: translateX(-50%) } }
+    @keyframes scroll-right { 0% { transform:translateX(-50%) } 100% { transform: translateX(0) } }
+    @media (prefers-reduced-motion: reduce){ .ticker-left, .ticker-right { animation: none; } }
+
+    /* ===== Footer (from CAGR) ===== */
+    .footer-red { background: var(--brand-ink); color:#fff; }
+    .footer-red a { color: rgba(255,255,255,.92); }
+    .footer-red a:hover { color:#fff; text-decoration: underline; }
+    .footer-red .heading { font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color: rgba(255,255,255,.82); }
+    .footer-red .muted { color: rgba(255,255,255,.78); }
+    .footer-red .divider { border-top:1px solid rgba(255,255,255,.18); }
+    .footer-red .chip { font-size:.72rem; border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:.25rem .5rem; color:#fff; background: rgba(255,255,255,.08); }
   </style>
 </head>
 <body class="min-h-full">
-  <!-- Header -->
+  <!-- ===== Top Ticker ===== -->
+  <div class="w-full bg-[var(--brand-ink)] text-white">
+    <div class="flex items-center gap-3 py-2 px-4 sm:px-6 lg:px-8">
+      <span class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 px-2.5 py-1 rounded-full">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+      </span>
+      <div class="ticker-rail flex-1" aria-label="Top tips" aria-live="polite">
+        <div id="topTicker" class="ticker ticker-right text-sm font-medium">
+          <span>Keep 3–6 months runway</span><span>Cut discretionary first under stress</span><span>Track all-in monthly spend</span><span>Rebuild cushion once income stabilizes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Header (from CAGR) ===== -->
   <header class="sticky top-0 z-40 border-b bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
     <div class="container flex items-center justify-between py-3">
       <a href="/" class="flex items-center gap-3">
@@ -54,299 +90,207 @@
           <div class="text-xs text-[var(--muted)] -mt-0.5">News, context & tools</div>
         </div>
       </a>
-      <nav class="hidden sm:flex items-center gap-5 text-sm text-slate-600">
-        <a class="hover:text-[var(--brand-ink)]" href="/#indices">Markets</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#heatmap">Heatmap</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#commodities">Commodities</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/tools" aria-current="page">Tools</a>
-        <a class="hover:text-[var(--brand-ink)]" href="/#articles">Articles</a>
-      </nav>
       <div class="hidden sm:flex items-center gap-2">
+        <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
+        <a href="/tools" class="btn btn-ghost">Browse Tools</a>
         <a href="/#subscribe" class="btn btn-primary">Subscribe</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
+  <!-- ===== Hero ===== -->
   <section class="border-b bg-white">
-    <div class="container py-8 md:py-12">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div class="max-w-2xl">
-          <div class="kicker mb-2">Personal Finance</div>
-          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Expense Buckets & Runway</h1>
-          <p class="mt-3 text-slate-600 text-lg">Categorize expenses, set buffers, and project months of runway.</p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <span class="pill">Budget</span><span class="pill">Runway</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 shrink-0">
-          <button id="copyLink" class="btn btn-ghost" title="Copy link with inputs">Copy Link</button>
-          <a href="/tools" class="btn btn-ghost">Browse Tools</a>
+    <div class="container section">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 lg:gap-8">
+        <div class="max-w-2xl flow-sm">
+          <div class="kicker">Personal Finance</div>
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">Expense Runway</h1>
+          <p class="text-slate-600 text-lg measure">Estimate how many months your cash lasts. Enter your <b>monthly income</b>, <b>monthly expenses</b>, and <b>liquid assets</b>. Add a quick shock if needed.</p>
+          <div class="flex flex-wrap gap-2"><span class="pill">Runway</span><span class="pill">Budget</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Body -->
-  <main class="container py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- LEFT: Inputs -->
+  <!-- ===== Main ===== -->
+  <main class="container section">
+    <div class="grid grid-cols-1 lg:grid-cols-2 main-grid">
+      <!-- Calculator -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
-        <p class="muted mt-1">Add monthly expenses, mark essentials, and set buffer months per bucket. Then enter assets & shock assumptions.</p>
+        <div class="flow">
+          <header class="flow-sm">
+            <h2 class="text-xl font-bold tracking-tight">Inputs</h2>
+            <p class="muted">Keep it simple: net income per month, all-in monthly spend, and total liquid assets.</p>
+          </header>
 
-        <!-- Income & Assets -->
-        <div class="mt-5 grid md:grid-cols-3 gap-4">
-          <div class="field">
-            <label for="income">Monthly net income (₹)</label>
-            <input id="income" type="number" inputmode="decimal" placeholder="e.g., 150000" min="0" step="any">
-          </div>
-          <div class="field">
-            <label for="bank">Bank / Sweep (₹)</label>
-            <input id="bank" type="number" inputmode="decimal" placeholder="e.g., 300000" min="0" step="any">
-          </div>
-          <div class="field">
-            <label for="liquid">Liquid fund (₹)</label>
-            <input id="liquid" type="number" inputmode="decimal" placeholder="e.g., 400000" min="0" step="any">
-          </div>
-        </div>
-        <div class="mt-4 grid md:grid-cols-3 gap-4">
-          <div class="field">
-            <label for="fd">Short FD / Ultra-short (₹)</label>
-            <input id="fd" type="number" inputmode="decimal" placeholder="e.g., 500000" min="0" step="any">
-          </div>
-          <div class="field">
-            <label for="liqCut">Liquidity haircut — Liquid (%)</label>
-            <input id="liqCut" type="number" inputmode="decimal" placeholder="0" step="any">
-            <div class="small muted mt-1">Optional safety haircut to be conservative.</div>
-          </div>
-          <div class="field">
-            <label for="fdCut">Liquidity haircut — FD (%)</label>
-            <input id="fdCut" type="number" inputmode="decimal" placeholder="1" step="any">
-          </div>
-        </div>
-
-        <!-- Shock -->
-        <div class="mt-6 grid md:grid-cols-4 gap-4">
-          <div class="field">
-            <label for="incDrop">Income drop (%)</label>
-            <input id="incDrop" type="number" inputmode="decimal" placeholder="100" step="any">
-            <div class="small muted mt-1">100 = job loss</div>
-          </div>
-          <div class="field">
-            <label for="expSurge">Expense surge (%)</label>
-            <input id="expSurge" type="number" inputmode="decimal" placeholder="0" step="any">
-          </div>
-          <div class="field">
-            <label for="oneShock">One-time shock (₹)</label>
-            <input id="oneShock" type="number" inputmode="decimal" placeholder="0" step="any">
-            <div class="small muted mt-1">Applied in month 1.</div>
-          </div>
-          <div class="field">
-            <label for="horizon">Sim horizon (months)</label>
-            <input id="horizon" type="number" inputmode="numeric" placeholder="12" min="1" step="1">
-          </div>
-        </div>
-
-        <!-- Buckets Table -->
-        <div class="mt-6">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="font-semibold">Expense buckets (monthly)</h3>
-            <div class="flex items-center gap-2">
-              <button id="addRow" class="btn btn-ghost">Add Row</button>
-              <button id="resetRows" class="btn btn-ghost">Reset</button>
-              <button id="csvExp" class="btn btn-ghost">Export CSV</button>
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="income">Monthly net income (₹)</label>
+              <input id="income" type="number" inputmode="decimal" placeholder="e.g., 150000" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="expenses">Monthly expenses — all-in (₹)</label>
+              <input id="expenses" type="number" inputmode="decimal" placeholder="e.g., 85000" min="0" step="any">
             </div>
           </div>
-          <div class="overflow-x-auto">
-            <table class="t">
-              <thead>
-                <tr>
-                  <th class="text-left">Name</th>
-                  <th class="text-right">Amount (₹)</th>
-                  <th class="text-left">Type</th>
-                  <th class="text-right">Buffer (mo)</th>
-                  <th class="text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="expTable"></tbody>
-              <tfoot>
-                <tr>
-                  <th class="text-left">Totals</th>
-                  <th class="text-right mono" id="totAmt">—</th>
-                  <th class="text-left"><span class="small muted">Ess: <span id="totEss">—</span> • Disc: <span id="totDisc">—</span></span></th>
-                  <th class="text-right mono" id="totBuf">—</th>
-                  <th></th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </div>
 
-        <div class="mt-6 flex items-center gap-3">
-          <button id="calc" class="btn btn-primary">Simulate</button>
-          <button id="reset" class="btn btn-ghost">Reset All</button>
-          <div id="msg" class="muted small"></div>
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="assets">Liquid assets total (₹)</label>
+              <input id="assets" type="number" inputmode="decimal" placeholder="e.g., 1200000" min="0" step="any">
+              <div class="small muted mt-1">Sum of bank, liquid funds, short FDs you can tap quickly.</div>
+            </div>
+            <div class="field">
+              <label for="horizon">Look-ahead horizon (months)</label>
+              <input id="horizon" type="number" inputmode="numeric" placeholder="12" min="1" step="1">
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4 lg:gap-5">
+            <div class="field">
+              <label for="drop">Income drop (%)</label>
+              <input id="drop" type="number" inputmode="decimal" placeholder="0" min="0" max="100" step="any">
+              <div class="small muted mt-1">100 = job loss</div>
+            </div>
+            <div class="field">
+              <label for="surge">Expense surge (%)</label>
+              <input id="surge" type="number" inputmode="decimal" placeholder="0" min="0" step="any">
+            </div>
+            <div class="field">
+              <label for="shock">One-time shock (₹)</label>
+              <input id="shock" type="number" inputmode="decimal" placeholder="0" min="0" step="any">
+              <div class="small muted mt-1">Applied in month 1</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="calc" class="btn btn-primary">Calculate</button>
+            <button id="reset" class="btn btn-ghost">Reset</button>
+            <div id="msg" class="muted small"></div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 lg:gap-5">
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Monthly burn after shock</div>
+              <div id="burn" class="result text-2xl font-bold" title="—">—</div>
+              <div class="small muted mt-1">Expenses × (1+surge) − Income × (1−drop)</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Runway</div>
+              <div id="runway" class="result text-2xl font-bold" title="—">—</div>
+              <div class="small muted mt-1">If burn ≤ 0: you’re saving (no depletion)</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Assets usable now</div>
+              <div id="usable" class="result text-2xl font-bold" title="—">—</div>
+              <div class="small muted mt-1">= Max(assets − shock, 0)</div>
+            </div>
+            <div class="p-4 rounded-lg border">
+              <div class="muted text-sm">Projected leftover after horizon</div>
+              <div id="leftover" class="result text-2xl font-bold" title="—">—</div>
+              <div class="small muted mt-1">At constant burn for the horizon</div>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-lg bg-slate-50 border">
+            <div class="kicker mb-1">Rule of thumb</div>
+            <p class="text-sm text-slate-700">Target at least <b>3–6 months</b> of runway. Under stress, cut discretionary spend first and rebuild the cushion once income stabilizes.</p>
+          </div>
         </div>
       </section>
 
-      <!-- RIGHT: Results -->
+      <!-- Examples (separate card) -->
       <section class="card p-6 md:p-8 lift">
-        <h2 class="text-xl font-bold tracking-tight">Results</h2>
-        <p class="muted mt-1">We compute baseline spend, target buffers, effective assets after haircuts, and simulate month-by-month burn with a simple glidepath: Bank → Liquid → FD.</p>
-
-        <div class="mt-6 grid-cards">
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Baseline monthly spend</div>
-            <div id="baseSpend" class="text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">Essential: <span id="essSpend" class="mono">—</span> • Discretionary: <span id="discSpend" class="mono">—</span></div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Target buffer corpus</div>
-            <div id="targetBuf" class="text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">= Σ(amount × buffer months)</div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Effective liquid assets</div>
-            <div id="effAssets" class="text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">After liquidity haircuts</div>
-          </div>
-          <div class="p-4 rounded-lg border">
-            <div class="muted text-sm">Projected runway</div>
-            <div id="runway" class="text-2xl font-bold mono">—</div>
-            <div class="muted text-sm mt-1">With shock: <span id="shockLabel" class="mono">—</span></div>
-          </div>
-        </div>
-
-        <!-- Schedule -->
-        <div class="mt-6 flex items-center justify-between">
-          <h3 class="font-semibold">Glidepath schedule</h3>
-          <div class="flex items-center gap-2">
-            <button id="csvSched" class="btn btn-ghost">Export CSV</button>
-          </div>
-        </div>
-        <div class="overflow-x-auto mt-2">
-          <table class="t">
-            <thead>
-              <tr>
-                <th class="text-left">Month</th>
-                <th class="text-right">Start Bank</th>
-                <th class="text-right">Start Liquid</th>
-                <th class="text-right">Start FD</th>
-                <th class="text-right">Income</th>
-                <th class="text-right">Spend (shock)</th>
-                <th class="text-right">End Bank</th>
-                <th class="text-right">End Liquid</th>
-                <th class="text-right">End FD</th>
-              </tr>
-            </thead>
-            <tbody id="schedTable"></tbody>
-          </table>
-        </div>
-
-        <div class="mt-6 p-4 rounded-lg bg-slate-50 border">
-          <div class="kicker mb-1">Rule of thumb</div>
-          <p class="text-sm text-slate-700">
-            Cover <b>1–2 months</b> of essentials in bank/sweep, <b>2–3 months</b> in liquid funds, and the rest in short FDs or ultra-short debt. Trim discretionary spend under income shocks to extend runway.
-          </p>
-        </div>
+        <div class="kicker mb-2">Examples</div>
+        <ul class="text-sm text-slate-700 space-y-2">
+          <li><button class="btn btn-ghost w-full justify-start" data-ex="ex1">Balanced: ₹1.5L income, ₹85k expenses, ₹12L assets</button></li>
+          <li><button class="btn btn-ghost w-full justify-start" data-ex="ex2">Job loss: 100% drop, ₹85k expenses, ₹7L assets</button></li>
+          <li><button class="btn btn-ghost w-full justify-start" data-ex="ex3">Mild shock: 30% drop, 10% surge, ₹5L assets</button></li>
+        </ul>
       </section>
     </div>
-
-    <!-- Examples -->
-    <section class="mt-8 grid md:grid-cols-2 gap-6">
-      <div class="card p-5">
-        <div class="kicker mb-1">Examples</div>
-        <ul class="text-sm text-slate-700 list-disc pl-5">
-          <li><button class="ex btn btn-ghost mt-2" data-example="ex1">Balanced plan: ₹1.5L income, ₹60k essentials, ₹25k disc</button></li>
-          <li><button class="ex btn btn-ghost mt-2" data-example="ex2">Job loss: 100% income drop, surge 10%, horizon 12</button></li>
-          <li><button class="ex btn btn-ghost mt-2" data-example="ex3">Mild shock: 30% drop, cut discretionary by 50%</button></li>
-        </ul>
-      </div>
-      <div class="card p-5">
-        <div class="kicker mb-1">Tips</div>
-        <ul class="text-sm text-slate-700 list-disc pl-5">
-          <li>Set higher buffer months for fixed/critical buckets (rent, insurance, EMIs).</li>
-          <li>Apply a small haircut to liquid/FDs to be conservative.</li>
-          <li>Use “one-time shock” for known near-term expenses (appliances, relocation, etc.).</li>
-        </ul>
-      </div>
-    </section>
   </main>
 
-  <!-- Footer (Anthropic-inspired, white) -->
-  <footer class="footer text-sm mt-8">
-    <div class="footer divider"></div>
+  <!-- ===== Bottom Ticker ===== -->
+  <div class="w-full bg-slate-100 border-y">
+    <div class="py-3 px-4 sm:px-6 lg:px-8">
+      <div class="ticker-rail" aria-label="Bottom tips">
+        <div id="bottomTicker" class="ticker ticker-left text-sm font-medium">
+          <span>Shareable link keeps your inputs</span><span>Outputs are estimates, not advice</span><span>Update monthly to track progress</span><span>Keep some cash quickly accessible</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer (from CAGR) ===== -->
+  <footer class="footer-red text-sm">
+    <div class="divider"></div>
     <div class="container py-10">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <a href="/" class="flex items-center gap-3">
           <span class="grid place-items-center h-9 w-9 rounded-xl bg-[var(--brand)] text-white font-bold shadow-sm">bS</span>
           <div>
             <div class="text-lg font-bold leading-tight">bataSutra</div>
-            <div class="text-xs muted -mt-0.5">Not just news — the <span class="chip">bata</span> behind the news</div>
+            <div class="text-xs muted -mt-0.5"></div>
           </div>
         </a>
-        <div class="muted max-w-xl">
-          We turn India’s business headlines into context and tools you can actually use.
-        </div>
+        <p class="muted max-w-2xl"></p>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8 mt-10">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 mt-10">
         <div>
-          <div class="heading mb-3">Product</div>
+          <div class="heading mb-3">Editorial</div>
           <ul class="space-y-2">
-            <li><a href="/#indices">Markets</a></li>
-            <li><a href="/#heatmap">Heatmap</a></li>
-            <li><a href="/#commodities">Commodities</a></li>
-            <li><a href="/#articles">Articles</a></li>
+            <li><a href="/articles">Latest</a></li>
+            <li><a href="/deep-dive">Deep Dives</a></li>
+            <li><a href="/weekend-wrap">Weekend Wrap</a></li>
+            <li><a href="/explainers">Explainers</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="heading mb-3">Data</div>
+          <ul class="space-y-2">
+            <li><a href="/indices.html">Indices</a></li>
+            <li><a href="/heatmap.html">Sector Heatmap</a></li>
+            <li><a href="/commodities.html">Commodities</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Tools</div>
           <ul class="space-y-2">
-            <li><a href="/tools">Browse Tools</a></li>
+            <li><a href="/tools">All Tools</a></li>
             <li><a href="/tools/cagr">CAGR &amp; Quick IRR</a></li>
-            <li><a href="/tools/sip-planner">SIP Goal &amp; Corpus</a></li>
-            <li><a href="/tools/ppf-ladder">PPF &amp; Emergency Ladder</a></li>
-            <li><a href="/tools/expense-buckets" aria-current="page">Expense Buckets &amp; Runway</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Company</div>
           <ul class="space-y-2">
-            <li><a href="/dashboard/whats-inside.html">What’s inside</a></li>
-            <li><a href="/careers">Careers</a></li>
-            <li><a href="/#subscribe">Newsletter</a></li>
-            <li><a href="mailto:hello@batasutra.com">Contact</a></li>
+            <li><a href="/about.html">About</a></li>
+            <li><a href="/advertise">Advertising</a></li>
+            <li><a href="/partnerships.html">Partnerships</a></li>
           </ul>
         </div>
         <div>
           <div class="heading mb-3">Resources</div>
           <ul class="space-y-2">
-            <li><a href="/tools#changelog">Changelog</a></li>
-            <li><a href="/articles">All articles</a></li>
-            <li><a href="/privacy">Privacy</a></li>
-            <li><a href="/terms">Terms</a></li>
+            <li><a href="/methodology.html">Methodology</a></li>
+            <li><a href="/data-sources.html">Data Sources</a></li>
+            <li><a href="/editorial-policy.html">Editorial Policy</a></li>
           </ul>
         </div>
         <div>
-          <div class="heading mb-3">Follow</div>
+          <div class="heading mb-3">Legal</div>
           <ul class="space-y-2">
-            <li><a href="https://x.com/" target="_blank" rel="noopener">X (Twitter)</a></li>
-            <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
-            <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="/privacy-policy.html">Privacy Policy</a></li>
+            <li><a href="/terms-of-services.html">Terms of Service</a></li>
           </ul>
         </div>
       </div>
 
-      <div class="footer divider mt-10"></div>
-      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <div class="divider mt-10"></div>
+      <div class="py-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div class="muted">&copy; <span id="year"></span> bataSutra. All rights reserved.</div>
         <div class="flex items-center gap-4 muted">
-          <a href="/privacy">Privacy</a>
-          <span aria-hidden="true">•</span>
-          <a href="/terms">Terms</a>
-          <span aria-hidden="true">•</span>
           <button type="button" class="chip" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to top ↑</button>
         </div>
       </div>
@@ -354,19 +298,176 @@
   </footer>
 
   <script>
-    // Utilities
+    /* ========= Headlines (same infra as CAGR; lightweight here) ========= */
+    const HEADLINES_SHEET_ID = '1WN8151jGQjqbfO0Aj2tK-79yJ9gCD_z0DLCdxs_higg';
+    const HEADLINES_TAB = 'Headlines'; const HEADLINES_GID = '';
+    const gvizCsv = (sheetId, sheet, range) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(sheet)}&range=${encodeURIComponent(range)}&t=${Date.now()}`;
+    const exportCsv = (sheetId, gid) =>
+      `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&id=${sheetId}&gid=${encodeURIComponent(gid)}&t=${Date.now()}`;
+
+    function parseCsv(text){
+      if ((text||'').trim().startsWith('<')) return { rows: [], isHtml:true };
+      const rows=[]; let row=[], cur='', inQuotes=false;
+      for(let i=0;i<text.length;i++){
+        const ch=text[i];
+        if(inQuotes){
+          if(ch === '"'){ if(text[i+1] === '"'){ cur+='"'; i++; } else { inQuotes=false; } }
+          else cur+=ch;
+        } else {
+          if(ch === '"') inQuotes=true;
+          else if(ch === ','){ row.push(cur); cur=''; }
+          else if(ch === '\n'){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else if(ch === '\r'){ } else cur+=ch;
+        }
+      }
+      if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+      return { rows, isHtml:false };
+    }
+    async function fetchCsvWithFallback({sheetId, sheet, range, gid, label}){
+      const attempts = [{ url: gvizCsv(sheetId, sheet, range), kind: 'gviz' }];
+      if (gid && String(gid).trim()) attempts.push({ url: exportCsv(sheetId, gid), kind: 'export' });
+      let lastErr = null;
+      for (const att of attempts){
+        try{
+          const res = await fetch(att.url, { cache: 'no-store' });
+          if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const txt = await res.text();
+          const { rows, isHtml } = parseCsv(txt);
+          if (isHtml) throw new Error('Returned HTML (tab likely not public)');
+          if (!rows.length) throw new Error('Empty CSV');
+          const headers = rows[0].map(h => h.replace(/^\uFEFF/,'').replace(/\u00A0/g,' ').trim());
+          const data = rows.slice(1)
+            .filter(r => r.some(x => (x??'').toString().trim()!==''))
+            .map(r => Object.fromEntries(headers.map((h,i)=>[h, (r[i]??'').toString().trim()])));
+          return { data, route: att.kind };
+        }catch(e){ lastErr = e; }
+      }
+      throw new Error(`${label} fetch failed: ${lastErr?.message || 'Unknown'}`);
+    }
+    function renderTicker(id, items, dir='right'){
+      const el = document.getElementById(id); if (!el) return;
+      el.classList.remove('ticker-left','ticker-right'); el.textContent = '';
+      const loop = [...items, ...items]; loop.forEach(t => { const s=document.createElement('span'); s.textContent = String(t||'').trim(); el.appendChild(s); });
+      void el.offsetWidth; el.classList.add(dir==='right' ? 'ticker-right' : 'ticker-left','ticker');
+      const railWidth = el.parentElement?.clientWidth || 0;
+      while (el.scrollWidth < railWidth * 2) { const clone = el.cloneNode(true); [...clone.children].forEach(ch => el.appendChild(ch)); }
+    }
+    async function hydrateTickers(){
+      try {
+        const { data } = await fetchCsvWithFallback({sheetId:HEADLINES_SHEET_ID, sheet:HEADLINES_TAB, range:'A:B', gid:HEADLINES_GID, label:'Headlines'});
+        const top    = data.filter(h=>/^top$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+        const bottom = data.filter(h=>/^bottom$/i.test((h.Section||'').toString())).map(h=>h.Text).filter(Boolean);
+        if (top.length)    renderTicker('topTicker', top, 'right');
+        if (bottom.length) renderTicker('bottomTicker', bottom, 'left');
+      } catch(e){ /* keep defaults */ }
+    }
+
+    /* ========= Simple Runway Logic ========= */
     const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const fmtINR = (n, d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
-    const toNum = v => { const n = Number(v); return Number.isFinite(n)? n : 0; };
+    const fmtINR = (n,d=0)=> Number.isFinite(n)? n.toLocaleString('en-IN',{maximumFractionDigits:d}) : '—';
+    const toNum  = v => { const n = Number(v); return Number.isFinite(n)? n : 0; };
+    const setOut = (id, v)=>{ const el = document.getElementById(id); if(!el) return; const txt = String(v ?? '—'); el.textContent = txt; el.title = txt; };
 
-    // Footer year
-    $("#year").textContent = new Date().getFullYear();
+    function calc(){
+      const income   = toNum($('#income').value);
+      const expenses = toNum($('#expenses').value);
+      const assets   = toNum($('#assets').value);
+      const horizon  = Math.max(1, Math.floor(toNum($('#horizon').value)||12));
+      const drop     = Math.max(0, toNum($('#drop').value))/100;
+      const surge    = Math.max(0, toNum($('#surge').value))/100;
+      const shock    = Math.max(0, toNum($('#shock').value));
 
-    // Expense table model
-    let ROWS = [];
+      const incEff   = income * (1 - drop);
+      const expEff   = expenses * (1 + surge);
+      const burn     = expEff - incEff;                     // per month
+      const usable   = Math.max(assets - shock, 0);
 
-    const DEFAULT_ROWS = [
-      {name:'Rent', amt:30000, type:'essential', buf:2},
-      {name:'Utilities', amt:6000, type:'essential', buf:1},
-      {name:'Gr
+      setOut('burn', burn<=0 ? `Saving ₹${fmtINR(Math.abs(burn))}/mo` : `₹${fmtINR(burn)}/mo`);
+      setOut('usable', `₹${fmtINR(usable)}`);
+
+      let runwayTxt = '—', leftoverTxt = '—';
+      if (burn <= 0){
+        runwayTxt = '∞ (no depletion)';
+        leftoverTxt = `₹${fmtINR(usable + Math.abs(burn)*horizon)}`;
+      } else {
+        const months = usable / burn;
+        const m1 = Math.max(0, Math.floor(months*10)/10); // 1 decimal
+        runwayTxt = `${m1} month${m1===1?'':'s'}`;
+        const leftover = usable - burn * horizon;
+        leftoverTxt = leftover <= 0 ? '₹0' : `₹${fmtINR(leftover)}`;
+      }
+      setOut('runway', runwayTxt);
+      setOut('leftover', leftoverTxt);
+
+      $('#msg').textContent = 'Done.';
+      pushState();
+    }
+
+    $('#calc').addEventListener('click', calc);
+    $('#reset').addEventListener('click', ()=>{
+      ['#income','#expenses','#assets','#horizon','#drop','#surge','#shock'].forEach(s=>$(s).value='');
+      ['burn','runway','usable','leftover'].forEach(id=>setOut(id,'—'));
+      $('#msg').textContent=''; pushState();
+    });
+
+    // Examples
+    function applyExample(key){
+      if (key==='ex1'){ // Balanced
+        $('#income').value=150000; $('#expenses').value=85000; $('#assets').value=1200000;
+        $('#drop').value=0; $('#surge').value=0; $('#shock').value=0; $('#horizon').value=12;
+      }
+      if (key==='ex2'){ // Job loss
+        $('#income').value=150000; $('#expenses').value=85000; $('#assets').value=700000;
+        $('#drop').value=100; $('#surge').value=0; $('#shock').value=0; $('#horizon').value=12;
+      }
+      if (key==='ex3'){ // Mild shock
+        $('#income').value=150000; $('#expenses').value=85000; $('#assets').value=500000;
+        $('#drop').value=30; $('#surge').value=10; $('#shock').value=0; $('#horizon').value=12;
+      }
+      calc();
+    }
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-ex]');
+      if (btn) applyExample(btn.getAttribute('data-ex'));
+    });
+
+    /* ========= URL state & copy link ========= */
+    function pushState(){
+      const p = new URLSearchParams();
+      const set=(k,v)=>{ if(v!=='' && v!=null) p.set(k,v); };
+      set('i',$('#income').value); set('e',$('#expenses').value);
+      set('a',$('#assets').value); set('h',$('#horizon').value);
+      set('d',$('#drop').value);   set('s',$('#surge').value);
+      set('k',$('#shock').value);
+      history.replaceState(null,'','?'+p.toString());
+    }
+    function loadFromURL(){
+      const q=new URLSearchParams(location.search), get=(k)=> q.has(k)? q.get(k) : '';
+      $('#income').value=get('i'); $('#expenses').value=get('e'); $('#assets').value=get('a');
+      $('#horizon').value=get('h'); $('#drop').value=get('d'); $('#surge').value=get('s'); $('#shock').value=get('k');
+    }
+    (function init(){
+      const y=document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+      const copyBtn = document.getElementById('copyLink');
+      if (copyBtn){
+        copyBtn.addEventListener('click', async ()=>{
+          try{ await navigator.clipboard.writeText(location.href);
+            const old=copyBtn.textContent; copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent=old,1200);
+          }catch{}
+        });
+      }
+      loadFromURL();
+      hydrateTickers().catch(()=>{});
+    })();
+
+    // Quick keyboard: Ctrl/Cmd+K to focus first field (matches other tools)
+    window.addEventListener('keydown',(e)=>{
+      const isMac = navigator.platform.toUpperCase().includes('MAC');
+      if ((isMac && e.metaKey && e.key.toLowerCase()==='k') || (!isMac && e.ctrlKey && e.key.toLowerCase()==='k')) {
+        e.preventDefault(); document.getElementById('income')?.focus();
+      }
+    });
+  </script>
+</body>
+</html>
